@@ -5,9 +5,19 @@ import json
 import mimetypes
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from socketserver import TCPServer
 from urllib.parse import parse_qs, urlparse
 
 from .service import Radar, BusyError
+
+
+class LoopbackHTTPServer(ThreadingHTTPServer):
+    def server_bind(self):
+        # HTTPServer resolves a reverse-DNS name during startup. The dashboard
+        # binds only to loopback and has no use for that potentially slow lookup.
+        TCPServer.server_bind(self)
+        self.server_name = "localhost"
+        self.server_port = self.server_address[1]
 
 
 def serve(port=8765, root=None):
@@ -87,7 +97,7 @@ def serve(port=8765, root=None):
             if args and str(args[1] if len(args) > 1 else "") not in ("200", "304"):
                 super().log_message(format, *args)
 
-    server = ThreadingHTTPServer(("127.0.0.1", port), Handler)
+    server = LoopbackHTTPServer(("127.0.0.1", port), Handler)
     print(f"arXiv 研究雷达：http://127.0.0.1:{server.server_port}", flush=True)
     try:
         server.serve_forever()

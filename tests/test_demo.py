@@ -1,5 +1,6 @@
 """Fresh-checkout smoke tests; only loopback HTTP, never a live arXiv call."""
 import json
+from http.server import BaseHTTPRequestHandler
 import os
 from pathlib import Path
 import selectors
@@ -8,10 +9,25 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 import urllib.error
 import urllib.request
 
 from radar.service import ROOT
+from radar.server import LoopbackHTTPServer
+
+
+class LoopbackStartupTests(unittest.TestCase):
+    def test_dynamic_port_binding_does_not_require_reverse_dns(self):
+        with patch("socket.getfqdn", side_effect=AssertionError("Unexpected DNS lookup")) as fqdn, \
+             patch("socket.gethostbyaddr", side_effect=AssertionError("Unexpected reverse DNS lookup")) as reverse:
+            with LoopbackHTTPServer(("127.0.0.1", 0), BaseHTTPRequestHandler) as server:
+                self.assertEqual(server.server_address[0], "127.0.0.1")
+                self.assertGreater(server.server_port, 0)
+                self.assertEqual(server.server_port, server.socket.getsockname()[1])
+                self.assertEqual(server.server_name, "localhost")
+            fqdn.assert_not_called()
+            reverse.assert_not_called()
 
 
 class DemoSmokeTests(unittest.TestCase):
