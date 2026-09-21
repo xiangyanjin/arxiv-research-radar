@@ -1,0 +1,106 @@
+{
+  "snapshot_at": "2026-09-21T06:00:09Z",
+  "source": "Official arXiv API metadata; four selected records, not a complete scan.",
+  "papers": [
+    {
+      "id": "2609.11836",
+      "version": 1,
+      "version_known": true,
+      "title": "Free-Probabilistic State Evolution and Random Matrix Discrepancy",
+      "authors": [
+        "August Y. Chen",
+        "Ahmed El Alaoui"
+      ],
+      "abstract": "Let $A_1,\\ldots,A_n$ be independent $d \\times d$ real symmetric Gaussian random matrices, and consider the linear operator $A(x) = n^{-1/2}\\sum_{i=1}^n x_i A_i$, $x\\in \\mathbb{R}^n$. We construct an iterative algorithm in the Approximate Message Passing family which iterates over $A$ and its adjoint $A^*$, and establish a state evolution result which characterizes its behavior in the limit $d\\rightarrow \\infty, 2n/d^2 \\rightarrow α$ in terms of a correlated Gaussian-semicircular process in a free probability space, in the sense of strong convergence of operators. We then apply this iteration to the random matrix discrepancy problem which asks for a binary vector $x \\in \\{-1,+1\\}^n$ such that $A(x)$ has a small operator norm. Our algorithm achieves an operator norm $2σ(α)$, for an explicit expression of the standard deviation $σ(α)<1$ for all $0<α<α_* \\simeq 5.74$. This resolves the algorithmic question of Kunisky-Zhang (2023) and Maillard (2025) in this interval.",
+      "categories": [
+        "math.PR",
+        "cs.DS"
+      ],
+      "url": "https://arxiv.org/abs/2609.11836v1",
+      "pdf_url": "https://arxiv.org/pdf/2609.11836v1",
+      "source": "arxiv-api",
+      "published": "2026-09-10T17:28:09Z",
+      "updated": "2026-09-10T17:28:09Z",
+      "date_basis": "submission",
+      "source_date": {
+        "published": "2026-09-10T17:28:09Z",
+        "updated": "2026-09-10T17:28:09Z"
+      }
+    },
+    {
+      "id": "2609.09370",
+      "version": 1,
+      "version_known": true,
+      "title": "Constraint-Aware Discrete Black-Box Optimization Using Tensor Decomposition",
+      "authors": [
+        "Keisuke Onoue",
+        "Ryosuke Kojima"
+      ],
+      "abstract": "Discrete black-box optimization is often addressed using approaches such as Sequential Model-Based Optimization (SMBO), which aims to improve sample efficiency by fitting surrogate models that approximate a costly objective function over a discrete search space. In many real-world problems, the set of feasible inputs is often given by logical constraints known in advance. However, existing surrogate modeling techniques generally fail to capture the symbolic rules governing feasibility in discrete input spaces. In this paper, we propose a surrogate modeling approach based on tensor decomposition that captures the structure of discrete search spaces while directly integrating feasibility information. To implement this approach, we formulate surrogate model training as a constrained polynomial optimization problem and solve a relaxed formulation using a differentiable penalty term derived from T-norms. Our experiments on both synthetic and real-world benchmarks, including a pressure vessel design task, demonstrate that the proposed method improves sample efficiency by effectively guiding the search away from infeasible regions.",
+      "categories": [
+        "cs.LG"
+      ],
+      "url": "https://arxiv.org/abs/2609.09370v1",
+      "pdf_url": "https://arxiv.org/pdf/2609.09370v1",
+      "source": "arxiv-api",
+      "published": "2026-09-08T19:05:24Z",
+      "updated": "2026-09-08T19:05:24Z",
+      "date_basis": "submission",
+      "source_date": {
+        "published": "2026-09-08T19:05:24Z",
+        "updated": "2026-09-08T19:05:24Z"
+      }
+    },
+    {
+      "id": "2402.10506",
+      "version": 5,
+      "version_known": true,
+      "title": "Optimistic Estimation of Convergence in Markov Chains with the Average-Mixing Time",
+      "authors": [
+        "Geoffrey Wolfer",
+        "Pierre Alquier"
+      ],
+      "abstract": "The convergence rate of a Markov chain to its stationary distribution is typically assessed using the concept of total variation mixing time. However, this worst-case measure often yields pessimistic estimates and is challenging to infer from observations. In this paper, we advocate for the use of the average-mixing time as a more optimistic and demonstrably easier-to-estimate alternative. We further illustrate its applicability across a range of settings, from two-point to countable spaces, and discuss some practical implications.",
+      "categories": [
+        "math.ST",
+        "math.PR"
+      ],
+      "url": "https://arxiv.org/abs/2402.10506v5",
+      "pdf_url": "https://arxiv.org/pdf/2402.10506v5",
+      "source": "arxiv-api",
+      "published": "2024-02-16T08:38:07Z",
+      "updated": "2026-09-17T12:47:02Z",
+      "date_basis": "submission",
+      "source_date": {
+        "published": "2024-02-16T08:38:07Z",
+        "updated": "2026-09-17T12:47:02Z"
+      }
+    },
+    {
+      "id": "2609.20713",
+      "version": 1,
+      "version_known": true,
+      "title": "A Unified Framework for Wasserstein Convergence of ULMC Methods beyond Log-Concavity: Old and New",
+      "authors": [
+        "Wanjie Lyu",
+        "Xiaojie Wang",
+        "Bin Yang"
+      ],
+      "abstract": "As a fundamental task across computational statistics, scientific computing and machine learning, sampling from high-dimensional probability distributions has received increasing attention in recent years. Numerous sampling algorithms have been proposed, among which underdamped Langevin Monte Carlo (ULMC) methods based on underdamped Langevin dynamics (ULD) have emerged as a class of efficient ones. In this work, we introduce a ``universal\" predictor-corrector formulation that bridges Euler-type, UBU-type and randomized schemes through different choices of method parameters. Notably, the ``universal\" integrator induces two novel classes of low-cost integrators, termed low-cost randomized integrators (LC-RIs) and low-cost UBU integrators (LC-UBUIs), as well as their exponential-free variants based on polynomial and rational approximations. The resulting new UBU-type and randomized schemes require only one gradient evaluation and two Gaussians per iteration, considerably reducing the number of gradient evaluations or Gaussians per iteration required by existing counterparts. Further, a general framework of long-time error analysis is developed for general discretization schemes in a probability metric. Under certain smoothness and non-log-concavity conditions, we rely on the unified framework to establish non-asymptotic $\\mathcal{W}_1$-error bounds of both old and new schemes, revealing convergence rates of order $\\mathcal{O}(d^{\\frac{1}{2}}h)$ for Euler-type schemes, order $\\mathcal{O}(d h^2)$ for UBU-type ones and order $\\mathcal{O}(d^{\\frac{1}{2}}h^{\\frac{3}{2}})$ for randomized ones. In the strongly convex setting, the same non-asymptotic error bounds can be recovered in $\\mathcal{W}_2$-distance. Numerical experiments corroborate the theoretical findings.",
+      "categories": [
+        "math.NA",
+        "math.ST"
+      ],
+      "url": "https://arxiv.org/abs/2609.20713v1",
+      "pdf_url": "https://arxiv.org/pdf/2609.20713v1",
+      "source": "arxiv-api",
+      "published": "2026-09-17T17:11:01Z",
+      "updated": "2026-09-17T17:11:01Z",
+      "date_basis": "submission",
+      "source_date": {
+        "published": "2026-09-17T17:11:01Z",
+        "updated": "2026-09-17T17:11:01Z"
+      }
+    }
+  ]
+}

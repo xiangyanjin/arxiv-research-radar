@@ -1,0 +1,138 @@
+{
+  "name": "arXiv Research Radar",
+  "topics": [
+    {
+      "id": "matrix",
+      "label": "随机矩阵",
+      "description": "随机矩阵强收敛、普适性、有限矩条件、非厄米谱与自由概率。",
+      "keywords": [
+        "random matrix",
+        "random matrices",
+        "strong convergence",
+        "universality",
+        "free probability",
+        "non-Hermitian random",
+        "fourth moment",
+        "operator norm",
+        "Wigner matrix",
+        "Wigner matrices",
+        "sample covariance",
+        "matrix products",
+        "Fuss-Catalan"
+      ],
+      "categories": [
+        "math.PR",
+        "math.ST",
+        "math.FA"
+      ],
+      "weight": 1.0
+    },
+    {
+      "id": "tensor",
+      "label": "张量与高维统计",
+      "description": "尖峰张量、张量PCA、幂迭代、热启动，以及高维统计推断与统计计算界限。",
+      "keywords": [
+        "spiked tensor",
+        "tensor PCA",
+        "tensor principal component",
+        "tensor estimation",
+        "tensor decomposition",
+        "alternating power",
+        "warm start",
+        "high-dimensional statistics",
+        "high-dimensional inference",
+        "spiked model",
+        "statistical computational",
+        "statistical-to-computational"
+      ],
+      "categories": [
+        "math.ST",
+        "stat.ML",
+        "cs.LG",
+        "math.PR"
+      ],
+      "weight": 1.0
+    },
+    {
+      "id": "markov",
+      "label": "马尔可夫链与谱隙",
+      "description": "马尔可夫链混合、条件重采样、滑动窗口占用计数核、Poincaré不等式与谱隙。",
+      "keywords": [
+        "Markov chain",
+        "Markov chains",
+        "spectral gap",
+        "mixing time",
+        "heat bath",
+        "Glauber dynamics",
+        "occupation count",
+        "occupation counts",
+        "occupation measure",
+        "conditional resampling",
+        "conditionally resampled",
+        "sliding window",
+        "Poincare inequality",
+        "Poincare inequalities",
+        "functional inequality",
+        "functional inequalities"
+      ],
+      "categories": [
+        "math.PR",
+        "math.ST",
+        "math.FA"
+      ],
+      "weight": 1.0
+    },
+    {
+      "id": "concentration",
+      "label": "集中不等式与几何概率",
+      "description": "KLS、Talagrand、对数凹分布、高维概率、布尔立方体反向热耦合与随机定位。",
+      "keywords": [
+        "concentration inequality",
+        "concentration inequalities",
+        "concentration of measure",
+        "KLS conjecture",
+        "Kannan Lovasz Simonovits",
+        "Talagrand",
+        "log concave",
+        "log-concavity",
+        "stochastic localization",
+        "reverse heat",
+        "Boolean cube",
+        "isoperimetric",
+        "high-dimensional probability",
+        "transport inequality",
+        "transport inequalities",
+        "log Sobolev"
+      ],
+      "categories": [
+        "math.PR",
+        "math.FA",
+        "math.ST"
+      ],
+      "weight": 1.0
+    }
+  ],
+  "categories": [
+    "math.PR",
+    "math.ST",
+    "math.FA",
+    "stat.ML",
+    "cs.LG"
+  ],
+  "own_arxiv_ids": [],
+  "self_author_names": [],
+  "scan": {
+    "lookback_days": 14,
+    "overlap_days": 3,
+    "page_size": 1000,
+    "max_pages": 30,
+    "timeout_seconds": 20,
+    "retries": 1
+  },
+  "digest_limit": 8,
+  "minimum_score": 20,
+  "display": {
+    "name": "arXiv Research Radar",
+    "timezone": "UTC"
+  }
+}

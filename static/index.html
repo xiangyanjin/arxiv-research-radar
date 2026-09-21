@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#174c40">
+  <meta name="description" content="围绕随机矩阵、尖峰张量、马尔可夫链与高维概率的本地 arXiv 研究雷达。">
+  <title>arXiv 研究雷达</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <script src="/i18n.js" defer></script>
+  <script src="/app.js" defer></script>
+</head>
+<body>
+<a class="skip-link" href="#main">跳至主要内容</a>
+<svg class="icon-library" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="i-radar" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><path d="M12 12 19 5M12 3v2M3 12h2M12 19v2M19 12h2"/><circle cx="12" cy="12" r="1"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9ZM14 3v6h6M8 13h8M8 17h5"/></symbol>
+  <symbol id="i-bookmark" viewBox="0 0 24 24"><path d="M6 4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v17l-6-4-6 4Z"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M7 17 17 7M7 7h10v10"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M6.1 6.1A8 8 0 0 1 20 12M4 12a8 8 0 0 0 13.9 5.9"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12m-5-5 5 5 5-5M4 15v5h16v-5"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+  <symbol id="i-hide" viewBox="0 0 24 24"><path d="m3 3 18 18M10.6 10.6a2 2 0 0 0 2.8 2.8M8.5 5.7A10 10 0 0 1 12 5c6 0 10 7 10 7a20 20 0 0 1-4.3 4.6M6 7C3.5 9 2 12 2 12s4 7 10 7a11 11 0 0 0 4-.8"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="13" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7v1"/></symbol>
+</svg>
+<div class="app-shell">
+  <aside class="sidebar" aria-label="研究雷达导航">
+    <a class="brand" href="/" aria-label="arXiv 研究雷达首页">
+      <span class="brand-mark"><svg class="icon"><use href="#i-radar"/></svg></span>
+      <span><strong>研究雷达</strong><small>arXiv · RESEARCH RADAR</small></span>
+    </a>
+    <p class="nav-caption">工作空间</p>
+    <nav class="main-nav">
+      <button class="nav-item active" data-view="papers" aria-current="page"><svg class="icon"><use href="#i-grid"/></svg><span>研究动态</span><span class="nav-count" id="nav-count">—</span></button>
+      <button class="nav-item" data-view="digest"><svg class="icon"><use href="#i-file"/></svg><span>研究日报</span></button>
+      <button class="nav-item" data-view="runs"><svg class="icon"><use href="#i-clock"/></svg><span>扫描记录</span></button>
+    </nav>
+    <div class="sidebar-topics"><p class="nav-caption">关注领域</p><div id="sidebar-topics"></div></div>
+    <div class="sidebar-bottom">
+      <div class="local-indicator"><span></span> 本地研究工作台</div>
+      <p>从公开资料发现相关研究，<br>为下一次深入阅读留一条线索。</p>
+      <div class="sidebar-signature"><span class="avatar" aria-hidden="true">R</span><div><strong id="profile-name">Research profile</strong><small>开放研究 · 本地记录</small></div></div>
+    </div>
+  </aside>
+
+  <main id="main" class="main" tabindex="-1">
+    <header class="topbar"><span class="topbar-label">PERSONAL RESEARCH OBSERVATORY</span><div class="topbar-tools"><span id="today-label" class="today-label"></span><div class="language-switch" role="group" aria-label="选择界面语言"><button type="button" data-language="en" aria-pressed="true" class="active">EN</button><button type="button" data-language="zh" aria-pressed="false">中文</button></div></div></header>
+    <section class="page-heading">
+      <div><div class="eyebrow" id="page-eyebrow">保持好奇，持续发现</div><h1 id="page-title">把相关研究，留在视野里。</h1><p id="page-description">关注你的研究方向，从 arXiv 的新论文与更新中寻找值得读的工作。</p></div>
+      <button class="button button-primary" id="scan-button"><svg class="icon"><use href="#i-refresh"/></svg><span>立即扫描</span></button>
+    </section>
+
+    <div id="global-notice" class="notice" role="status" hidden></div>
+    <div id="connection-error" class="notice notice-error" role="alert" hidden></div>
+
+    <section class="view" id="view-papers" aria-label="论文研究动态">
+      <div class="overview">
+        <div class="overview-intro"><span class="section-kicker">你的研究视野</span><strong id="overview-title">连接研究线索</strong><span id="last-scan-label">正在读取扫描状态…</span></div>
+        <div class="metric"><span>相关论文</span><strong id="stat-relevant">—</strong><small>已收录</small></div>
+        <div class="metric"><span>本次新增</span><strong id="stat-new">—</strong><small>首次发现</small></div>
+        <div class="metric"><span>版本更新</span><strong id="stat-updates">—</strong><small>已有论文</small></div>
+        <div class="metric"><span>我的收藏</span><strong id="stat-saved">—</strong><small>留待阅读</small></div>
+      </div>
+
+      <div class="papers-toolbar"><div><h2>论文线索 <span id="results-count" class="count-label"></span></h2><p>主题相关度基于标题、摘要与分类，不代表论文质量或证明正确性。</p></div><a class="button button-plain" id="bib-link" href="/api/exports/bib" download="research-radar.bib" title="优先导出收藏；没有收藏时导出排名靠前的相关论文，数量由日报配置决定"><svg class="icon"><use href="#i-download"/></svg>导出 BibTeX</a></div>
+      <div class="filter-panel">
+        <div class="topic-filters" id="topic-filters" aria-label="研究方向筛选"></div>
+        <div class="filter-row"><div class="status-filters" aria-label="论文状态筛选">
+          <button class="status-filter active" data-filter="all" aria-pressed="true">全部</button>
+          <button class="status-filter" data-filter="new" aria-pressed="false">本次新增</button>
+          <button class="status-filter" data-filter="updates" aria-pressed="false">版本更新</button>
+          <button class="status-filter" data-filter="saved" aria-pressed="false">收藏</button>
+          <button class="status-filter" data-filter="hidden" aria-pressed="false">已忽略</button>
+        </div><label class="search-box"><svg class="icon"><use href="#i-search"/></svg><input id="search-input" type="search" placeholder="搜索标题、作者或关键词" aria-label="搜索标题、作者或关键词" autocomplete="off"></label></div>
+      </div>
+      <div id="paper-list" class="paper-list" aria-live="polite"><div class="empty-state"><span class="loading-spinner"></span><h3>正在载入研究线索</h3><p>读取本地论文库与最近扫描记录。</p></div></div>
+    </section>
+
+    <section class="view" id="view-digest" aria-label="研究日报" hidden>
+      <div class="section-toolbar"><div><h2>最新研究日报</h2><p id="digest-meta">只汇总扫描中实际获取的论文与更新。</p></div><button class="button button-secondary" id="copy-digest" disabled><svg class="icon"><use href="#i-copy"/></svg>复制日报</button></div>
+      <div id="digest-content" class="digest-content"></div>
+    </section>
+
+    <section class="view" id="view-runs" aria-label="扫描运行记录" hidden>
+      <div class="section-toolbar"><div><h2>每次扫描，都有记录</h2><p>查看数据覆盖范围、执行过程和来源异常。</p></div><button class="button button-secondary" id="refresh-runs"><svg class="icon"><use href="#i-refresh"/></svg>刷新记录</button></div>
+      <div id="runs-list" class="runs-list"></div>
+    </section>
+    <footer class="main-footer"><span>arXiv 研究雷达</span><span>公开来源 · 本地记录 · 摘要级初筛</span><a href="https://arxiv.org" target="_blank" rel="noopener noreferrer">arXiv.org <svg class="icon"><use href="#i-arrow"/></svg></a></footer>
+  </main>
+</div>
+<div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+</body>
+</html>
