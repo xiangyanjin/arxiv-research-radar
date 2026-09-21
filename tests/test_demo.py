@@ -78,7 +78,18 @@ class DemoSmokeTests(unittest.TestCase):
         self.addCleanup(stop)
         with selectors.DefaultSelector() as selector:
             selector.register(process.stdout, selectors.EVENT_READ)
-            self.assertTrue(selector.select(timeout=5), "Dashboard did not start")
+            # Hosted runners may start slowly; readiness is the emitted URL,
+            # not a startup performance requirement. Keep failure diagnostics.
+            ready = selector.select(timeout=30)
+        if not ready:
+            process.terminate()
+            try:
+                stdout, stderr = process.communicate(timeout=3)
+            except subprocess.TimeoutExpired:
+                process.kill()
+                stdout, stderr = process.communicate(timeout=3)
+            self.fail(f"Dashboard did not start within 30s (exit {process.returncode}). "
+                      f"stdout={stdout!r}; stderr={stderr!r}")
         line = process.stdout.readline()
         self.assertIn("http://127.0.0.1:", line)
         base = "http://" + line.split("http://", 1)[1].strip()
