@@ -14,7 +14,7 @@
   ],
   "topics": [
     {
-      "id": "random-matrix-theory",
+      "id": "matrix",
       "label": "Random matrix theory",
       "description": "随机矩阵强收敛、普适性、有限矩条件、非厄米谱与自由概率。",
       "keywords": [
@@ -37,20 +37,10 @@
         "math.ST",
         "math.FA"
       ],
-      "weight": 1.0,
-      "anchors": [
-        "random matrix",
-        "random matrices",
-        "free probability",
-        "Wigner matrix",
-        "Wigner matrices",
-        "sample covariance",
-        "Fuss Catalan",
-        "non Hermitian random"
-      ]
+      "weight": 1.0
     },
     {
-      "id": "high-dimensional-statistics",
+      "id": "tensor",
       "label": "High-dimensional statistics",
       "description": "尖峰张量、张量PCA、幂迭代、热启动，以及高维统计推断与统计计算界限。",
       "keywords": [
@@ -73,23 +63,10 @@
         "cs.LG",
         "math.PR"
       ],
-      "weight": 1.0,
-      "anchors": [
-        "spiked tensor",
-        "tensor PCA",
-        "tensor principal component",
-        "tensor estimation",
-        "tensor decomposition",
-        "alternating power",
-        "high dimensional statistics",
-        "high dimensional inference",
-        "spiked model",
-        "statistical computational",
-        "statistical to computational"
-      ]
+      "weight": 1.0
     },
     {
-      "id": "markov-chain-mixing",
+      "id": "markov",
       "label": "Markov chain mixing",
       "description": "马尔可夫链混合、条件重采样、滑动窗口占用计数核、Poincaré不等式与谱隙。",
       "keywords": [
@@ -115,23 +92,10 @@
         "math.ST",
         "math.FA"
       ],
-      "weight": 1.0,
-      "anchors": [
-        "Markov chain",
-        "Markov chains",
-        "Glauber dynamics",
-        "heat bath",
-        "occupation count",
-        "occupation counts",
-        "occupation measure",
-        "conditional resampling",
-        "conditionally resampled",
-        "Poincare inequality",
-        "Poincare inequalities"
-      ]
+      "weight": 1.0
     },
     {
-      "id": "measure-concentration",
+      "id": "concentration",
       "label": "Concentration and geometry",
       "description": "KLS、Talagrand、对数凹分布、高维概率、布尔立方体反向热耦合与随机定位。",
       "keywords": [
@@ -157,23 +121,7 @@
         "math.FA",
         "math.ST"
       ],
-      "weight": 1.0,
-      "anchors": [
-        "concentration inequality",
-        "concentration inequalities",
-        "concentration of measure",
-        "KLS conjecture",
-        "Kannan Lovasz Simonovits",
-        "Talagrand",
-        "log concave",
-        "log concavity",
-        "stochastic localization",
-        "reverse heat",
-        "high dimensional probability",
-        "transport inequality",
-        "transport inequalities",
-        "log Sobolev"
-      ]
+      "weight": 1.0
     }
   ],
   "own_arxiv_ids": [],

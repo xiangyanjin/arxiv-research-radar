@@ -9,6 +9,8 @@ from pathlib import Path
 import re
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
+from .ranking import _text
+
 
 class ConfigError(ValueError):
     """A configuration problem suitable for display without a traceback."""
@@ -55,6 +57,12 @@ def validate_profile(value):
         if isinstance(item, bool) or not isinstance(item, int) or not low <= item <= high:
             fail(field, f"需要 {low}–{high} 之间的整数 / expected an integer")
 
+    def terms(field, items, allow_empty=False):
+        strings(field, items, allow_empty=allow_empty)
+        for item in items:
+            if not _text(item):
+                fail(field, "规范化后必须含有字母或数字 / term must contain letters or numbers after normalization")
+
     result.setdefault("name", "arXiv Research Radar")
     string("name", result["name"])
     display = result.setdefault("display", {})
@@ -70,6 +78,8 @@ def validate_profile(value):
         fail("display.timezone", "需要有效的 IANA 时区，例如 UTC 或 Asia/Shanghai")
 
     strings("categories", result.get("categories"), categories=True)
+    if "exclude_keywords" in result:
+        terms("exclude_keywords", result["exclude_keywords"], allow_empty=True)
     topics = result.get("topics")
     if not isinstance(topics, list) or not topics:
         fail("topics", "至少配置一个研究方向 / configure at least one topic")
@@ -83,10 +93,12 @@ def validate_profile(value):
             fail(field + ".id", "需要唯一的小写英文标识 / expected a unique lowercase identifier")
         seen.add(topic["id"])
         string(field + ".label", topic.get("label"))
-        strings(field + ".keywords", topic.get("keywords"))
+        terms(field + ".keywords", topic.get("keywords"))
         strings(field + ".categories", topic.setdefault("categories", []), allow_empty=True, categories=True)
         if "anchors" in topic:
-            strings(field + ".anchors", topic["anchors"])
+            terms(field + ".anchors", topic["anchors"])
+        if "exclude_keywords" in topic:
+            terms(field + ".exclude_keywords", topic["exclude_keywords"], allow_empty=True)
         weight = topic.setdefault("weight", 1.0)
         if isinstance(weight, bool) or not isinstance(weight, (int, float)) or not math.isfinite(weight) or not 0 < weight <= 5:
             fail(field + ".weight", "需要大于 0 且不超过 5 的数 / expected a number in (0, 5]")

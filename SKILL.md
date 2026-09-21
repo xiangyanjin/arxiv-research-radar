@@ -51,11 +51,13 @@ and `concentration` carry mathematics-specific rules.
 
 Choose arXiv retrieval categories relevant to the request. Top-level `categories`
 control retrieval; topic categories only provide ranking context. Use explicit
-`anchors` for ambiguous terms and explain heuristic weights. Do not invent
-unsupported settings such as semantic embeddings, negative-keyword filters, or
-automatic preference learning. If the user requests exclusions that cannot be
-represented, explain the limit and narrow the keywords or review candidates
-manually. For an unfamiliar field, check the official arXiv category taxonomy.
+`anchors` for ambiguous terms and explain heuristic weights. Capture the user's
+unwanted subjects with specific `exclude_keywords`: top-level phrases exclude a
+paper, while a topic's phrases only remove that topic's contribution. Use global
+exclusions only for subjects the user wants to exclude across the whole feed.
+These are literal phrase rules; a negated mention can still trigger exclusion.
+Do not invent unsupported semantic embeddings or automatic preference learning.
+For an unfamiliar field, check the official arXiv category taxonomy.
 
 Validate before opening a database or scanning:
 
@@ -102,9 +104,12 @@ inventing papers or producing a fabricated full digest.
 - Open the local dashboard with `serve --profile … --data-dir … --port 8765` when
   requested. Reading states, version-aware notes, and exports are described in
   [docs/reading-library.md](docs/reading-library.md).
-- To change direction, edit the chosen profile, validate it, and use the same
-  collection if the user wants to keep their reading library. Existing records
-  rerank; a changed retrieval scope takes effect on the next scan.
+- To change direction, prepare and validate a proposed profile copy. For an
+  existing collection, use the offline preview described below before applying
+  the requested change, and keep the same collection if the user wants to retain
+  their reading library. Existing records
+  rerank; a changed retrieval scope takes effect on the next scan. Saved papers
+  and notes remain accessible even when their papers become excluded.
 - For ranking evaluation, read [docs/evaluation.md](docs/evaluation.md). The
   included fictional regression cases are not real-world accuracy measurements
   and are not a benchmark for a newly configured field.
@@ -112,6 +117,29 @@ inventing papers or producing a fabricated full digest.
   use the host's supported scheduler. Preserve any existing authorization and
   selected timezone. Report a schedule as active only after verifying creation.
   A local `acknowledge` records scope, not external message delivery.
+
+## Refine a profile with visible consequences
+
+Read [docs/profile-tuning.md](docs/profile-tuning.md) when the user wants fewer
+irrelevant results, different topic boundaries, or an explanation of a match.
+Use `topic_decisions` to distinguish a title/abstract match, missing context, and
+an exclusion; normalized keyword matches are not verbatim evidence quotes.
+Spelling variants that normalize identically count once.
+
+For an existing collection, `export-candidates` exports stored metadata including
+unrecommended and hidden papers, without notes or prior agent reviews. Compare a
+proposed profile against the active profile on this fixed pool:
+
+```bash
+python3 /absolute/skill/root/scripts/radar.py export-candidates --profile /absolute/project/radar-workspace/profile.json --data-dir /absolute/project/radar-workspace/data --output /absolute/project/radar-workspace/candidates.json
+python3 /absolute/skill/root/scripts/radar.py preview-profile /absolute/project/radar-workspace/candidates.json --profile /absolute/project/radar-workspace/proposed-profile.json --baseline /absolute/project/radar-workspace/profile.json --format markdown --output /absolute/project/radar-workspace/preview.md
+```
+
+Explain added/removed recommendations and representative reasons before applying
+an authorized configuration change. Preview never applies the proposed profile.
+A narrower or longer list is not evidence of better accuracy: the pool has no
+ground-truth labels, and it cannot reveal papers never retrieved. Do not open or
+initialize a collection just to satisfy a request for configuration alone.
 
 For installation and invocation examples, use
 [docs/agent-skill.md](docs/agent-skill.md).

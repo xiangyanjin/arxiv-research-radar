@@ -12,7 +12,8 @@ Tell your agent what you study, create a research profile, and keep up with rele
 
 - **Choose your field:** describe your interests in natural language, start from a preset, or edit a JSON profile. Topics and keywords are configurable for any subject covered by arXiv.
 - **Retrieve:** scan official arXiv metadata by research category, with pagination, request pacing, retries, and archived responses.
-- **Rank:** match titles and abstracts against a configurable research profile; show the terms behind each recommendation.
+- **Explain matches:** inspect title and abstract matches, required context, and exclusion rules in a compact **Match details** panel.
+- **Tune safely:** preview a proposed profile on a fixed candidate pool before changing your active configuration or library.
 - **Remember:** deduplicate cross-listed papers in SQLite, distinguish first discovery from a new version, and preserve reading feedback.
 - **Review:** export a queue for a human or coding agent, then validate imported reviews against the stored paper version and exact abstract quotes.
 - **Read:** save and mark papers as read independently, keep version-aware reading notes, sort and search your library, and export the current results as Markdown or BibTeX.
@@ -89,11 +90,23 @@ These are starting points, not an exhaustive list. Ask the skill for a custom di
 
 Use `--profile /absolute/path/profile.json --data-dir /absolute/path/data` **after the subcommand** to keep several research collections separate. Environment variables `ARXIV_RADAR_PROFILE` and `ARXIV_RADAR_DATA_DIR` remain supported. [Configuration and custom-profile examples →](docs/configuration.md)
 
+## Preview a profile change offline
+
+```bash
+python3 -m radar preview-profile examples/profile-tuning-papers.json --profile examples/profile-tuning.json --baseline config/presets/ai-agents.json --format markdown
+```
+
+This six-record **fictional demonstration** adds a desktop-automation candidate and removes chemical-agent and medical-diagnosis candidates under the proposed rules. It makes no network or model request and changes neither your profile nor your library. It demonstrates rule behavior, not improved recommendation accuracy.
+
+For your own collection, `export-candidates` includes stored papers that were not recommended or were hidden, without reading notes or generated reviews. Compare a proposed profile against that snapshot before adopting it. Exclusion phrases match literally—even inside negated sentences—so inspect what they remove. [Profile-tuning workflow →](docs/profile-tuning.md)
+
 ## Turn discoveries into a reading library
 
 Bookmark a paper, mark it as read, and write a short note without losing any of the other states. Notes survive rescans and paper revisions; the dashboard identifies the paper version the note was saved against. Unsubmitted note drafts stay in the current browser tab across filters and refreshes until you save or discard them.
 
 Use **Saved**, **Read**, **Unread**, or **With notes**, search your notes alongside titles and abstracts, and sort by relevance, newest update, or title. Saved/read/noted papers remain accessible in those library views even after a research-profile change lowers their score. **Export BibTeX** and **Export reading list** export all results in the current view, with its filters and ordering, rather than silently switching to another collection. Markdown notes are labeled as your own notes.
+
+Open **Match details** to see why a topic matched or was blocked. Managed papers excluded by the current rules retain their reading records and display an exclusion badge. The matched phrases describe rule decisions; they are not quotations or proof of research relevance.
 
 Existing databases upgrade automatically. See [reading-library details](docs/reading-library.md) for state, migration, and export semantics.
 

@@ -12,7 +12,7 @@ from pathlib import Path
 from urllib.parse import quote, urlsplit
 
 from .store import Store
-from .ranking import rank_paper
+from .ranking import rank_paper, is_recommended
 from .config import data_path, profile_path, load_profile
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -182,7 +182,7 @@ class Radar:
             handle.close()
 
     def is_relevant(self, paper):
-        return paper["score"] >= self.profile.get("minimum_score", 20) and not paper["is_own"]
+        return is_recommended(paper, self.profile)
 
     def papers(self, topic="", filter="all", q="", run_id=None, include_hidden=False, include_low=False, sort="relevance"):
         filter = filter or "all"

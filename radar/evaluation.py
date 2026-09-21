@@ -5,7 +5,7 @@ import hashlib
 import json
 
 from .config import validate_profile
-from .ranking import rank_paper
+from .ranking import rank_paper, is_recommended
 
 
 def fingerprint(value):
@@ -54,7 +54,7 @@ def evaluate(dataset, profile, k=5):
     for case in dataset["cases"]:
         paper = case["paper"]
         ranking = rank_paper(paper, profile)
-        predicted = not ranking["is_own"] and ranking["score"] >= profile["minimum_score"]
+        predicted = is_recommended(ranking, profile)
         rows.append({"id": paper["id"], "title": paper["title"],
                      "relevant": case["relevant"], "recommended": predicted,
                      "score": ranking["score"], "matched_terms": ranking["matched_terms"],

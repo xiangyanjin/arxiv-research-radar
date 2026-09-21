@@ -188,7 +188,31 @@
   "相关性优先": "Relevance",
   "最近更新优先": "Newest revision",
   "按标题排序": "Title A–Z",
-  "导出包括已保存笔记；草稿仅在本标签页保留。": "Exports include saved notes. Drafts stay in this tab."
+  "导出包括已保存笔记；草稿仅在本标签页保留。": "Exports include saved notes. Drafts stay in this tab.",
+  "匹配详情": "Match details",
+  "已被方向规则排除": "Excluded by topic rules",
+  "为何被排除": "Why excluded",
+  "命中全局排除词": "Matched global exclusion terms",
+  "保留阅读记录，但不加入方向推荐。": "Kept in your reading library, but excluded from recommendations.",
+  "匹配到的主题均被排除规则阻断；保留阅读记录，不加入方向推荐。": "All matching topics were blocked by exclusion rules. Kept in your reading library, but excluded from recommendations.",
+  "当前方向规则排除了这篇论文；保留阅读记录，可展开匹配详情查看原因。": "The current topic rules exclude this paper. Your reading record is kept; open match details for the reasons.",
+  "下列命中项是规范化匹配的配置短语，不是论文原文引文。": "Matches below are configured phrases compared using normalized text, not quotations from the paper.",
+  "全局排除规则优先于下列主题匹配分数。": "Global exclusion rules take precedence over the topic scores below.",
+  "全局排除词": "Global exclusion terms",
+  "已匹配该主题": "Matched this topic",
+  "未命中关键词": "No keyword match",
+  "缺少必要语境": "Required context not found",
+  "被排除词阻断": "Blocked by exclusion terms",
+  "不符合主题语境": "Outside this topic’s context",
+  "未提供决策说明": "Decision explanation unavailable",
+  "研究方向": "Research topic",
+  "主题得分": "Topic score",
+  "标题命中": "Title matches",
+  "摘要命中": "Abstract matches",
+  "语境锚点": "Context anchors",
+  "主题排除词": "Topic exclusion terms",
+  "未命中": "No match",
+  "部分主题被排除；详见匹配详情。": "Some topics were excluded; see match details."
 };
   let language = "en";
   try { language = localStorage.getItem("arxiv-radar-language") === "zh" ? "zh" : "en"; } catch {}

@@ -1,0 +1,25 @@
+{
+  "name": "Web and desktop agent research",
+  "description": "An illustrative narrower profile. The exclusions are examples, not a recommendation to exclude these fields universally.",
+  "categories": ["cs.AI", "cs.CL", "cs.HC"],
+  "exclude_keywords": ["medical diagnosis"],
+  "topics": [
+    {
+      "id": "web-desktop-evaluation",
+      "label": "Web and desktop agent evaluation",
+      "keywords": ["web agent", "web agents", "agent benchmarks", "desktop automation"],
+      "anchors": ["agent", "agents"],
+      "exclude_keywords": ["chemical"],
+      "categories": ["cs.AI", "cs.HC"]
+    },
+    {
+      "id": "llm-tool-calling",
+      "label": "Language-model tool calling",
+      "keywords": ["tool calling", "function calling"],
+      "anchors": ["language model", "language models"],
+      "categories": ["cs.AI", "cs.CL"]
+    }
+  ],
+  "minimum_score": 20,
+  "digest_limit": 8
+}

@@ -5,7 +5,7 @@
   const i18n = window.RadarI18n;
   const t = i18n.t;
   i18n.init();
-  const state = { view: "papers", topic: "", filter: "all", query: "", sort: "relevance", data: null, digest: "", poll: null, search: null, request: 0, lastRun: "", loadingScan: false, toast: null, drafts: new Map(), notesOpen: new Set(), noteWidgets: new Map(), libraryPending: new Set(), draftStorageError: false };
+  const state = { view: "papers", topic: "", filter: "all", query: "", sort: "relevance", data: null, digest: "", poll: null, search: null, request: 0, lastRun: "", loadingScan: false, toast: null, drafts: new Map(), notesOpen: new Set(), noteWidgets: new Map(), matchDetailsOpen: new Set(), libraryPending: new Set(), draftStorageError: false };
 
   const draftStorageKey = "arxiv-radar-note-drafts-v1";
   try {
@@ -287,6 +287,78 @@
     }
   }
   function badge(text, kind = "") { return el("span", `badge${kind ? ` badge-${kind}` : ""}`, text); }
+  function matchTerms(value) {
+    return [...new Set(list(value).filter((term) => typeof term === "string" && term.trim()))];
+  }
+  function exclusionSummary(paper) {
+    const terms = matchTerms(paper.excluded_terms);
+    if (terms.length) return `${t("命中全局排除词")}: ${terms.join(", ")}. ${t("保留阅读记录，但不加入方向推荐。")}`;
+    const decisions = list(paper.topic_decisions);
+    if (decisions.some((decision) => decision.status === "excluded") && !decisions.some((decision) => decision.status === "matched")) {
+      return t("匹配到的主题均被排除规则阻断；保留阅读记录，不加入方向推荐。");
+    }
+    return t("当前方向规则排除了这篇论文；保留阅读记录，可展开匹配详情查看原因。");
+  }
+  function matchingDetails(paper) {
+    const globalTerms = matchTerms(paper.excluded_terms);
+    const decisions = list(paper.topic_decisions).filter((decision) => {
+      if (!decision || typeof decision !== "object" || decision.status === "no_keywords") return false;
+      return ["matched", "missing_anchor", "excluded", "context_rejected"].includes(decision.status)
+        || ["title_terms", "abstract_terms", "anchor_terms", "excluded_terms"].some((key) => matchTerms(decision[key]).length);
+    });
+    if (!decisions.length && !globalTerms.length && !paper.excluded) return null;
+    const details = el("details", "paper-detail matching-details");
+    details.dataset.matchDetails = paper.id;
+    details.open = state.matchDetailsOpen.has(paper.id);
+    details.addEventListener("toggle", () => {
+      if (details.open) state.matchDetailsOpen.add(paper.id); else state.matchDetailsOpen.delete(paper.id);
+    });
+    const summary = el("summary", "", t("匹配详情"));
+    const body = el("div", "matching-body");
+    body.append(el("p", "matching-note", t("下列命中项是规范化匹配的配置短语，不是论文原文引文。")));
+    if (paper.excluded) {
+      body.append(el("p", "matching-exclusion", exclusionSummary(paper)));
+      if (globalTerms.length) body.append(el("p", "matching-note", t("全局排除规则优先于下列主题匹配分数。")));
+    }
+    function termRow(label, terms, kind = "", field = "") {
+      const row = el("div", `matching-row${kind ? ` matching-row-${kind}` : ""}`);
+      if (field) row.dataset.matchField = field;
+      row.append(el("dt", "matching-label", label));
+      const values = el("dd", "matching-terms");
+      if (terms.length) terms.forEach((term) => values.append(el("span", "matching-term", term)));
+      else values.append(el("span", "matching-empty", t("未命中")));
+      row.append(values); return row;
+    }
+    if (globalTerms.length) {
+      const global = el("dl", "matching-global");
+      global.append(termRow(t("全局排除词"), globalTerms, "excluded", "global-exclusions")); body.append(global);
+    }
+    const labels = {
+      matched: t("已匹配该主题"),
+      no_keywords: t("未命中关键词"),
+      missing_anchor: t("缺少必要语境"),
+      excluded: t("被排除词阻断"),
+      context_rejected: t("不符合主题语境")
+    };
+    decisions.forEach((decision) => {
+      const block = el("section", "matching-topic");
+      block.dataset.matchTopic = decision.id || "";
+      const header = el("div", "matching-topic-heading");
+      header.append(el("h4", "matching-topic-title", topicLabel(decision) || t("研究方向")));
+      const status = el("span", `matching-status${decision.status === "matched" ? " is-matched" : " is-blocked"}`, labels[decision.status] || t("未提供决策说明"));
+      status.dataset.matchStatus = decision.status || "unknown";
+      header.append(status);
+      if (Number.isFinite(decision.score)) header.append(el("span", "matching-score", `${t("主题得分")} ${count(decision.score)}`));
+      const rows = el("dl", "matching-fields");
+      rows.append(termRow(t("标题命中"), matchTerms(decision.title_terms), "", "title"), termRow(t("摘要命中"), matchTerms(decision.abstract_terms), "", "abstract"));
+      const anchors = matchTerms(decision.anchor_terms);
+      if (anchors.length || decision.status === "missing_anchor") rows.append(termRow(t("语境锚点"), anchors, "", "anchors"));
+      const excluded = matchTerms(decision.excluded_terms);
+      if (excluded.length) rows.append(termRow(t("主题排除词"), excluded, "excluded", "topic-exclusions"));
+      block.append(header, rows); body.append(block);
+    });
+    details.append(summary, body); return details;
+  }
   function paperCard(paper) {
     const saved = typeof paper.saved === "boolean" ? paper.saved : paper.feedback === "saved";
     const read = typeof paper.read === "boolean" ? paper.read : paper.feedback === "read";
@@ -297,6 +369,7 @@
     if (paper.last_event === "new") top.append(badge(t("新发现"), "new"));
     if (["update", "updated"].includes(paper.last_event)) top.append(badge(t("版本更新"), "update"));
     if (paper.is_own) top.append(badge(t("本人论文"), "own"));
+    if (paper.excluded) top.append(badge(t("已被方向规则排除"), "excluded"));
     if (saved) top.append(badge(t("已收藏"), "saved"));
     if (read) top.append(badge(t("已读过"), "read"));
     if (hidden) top.append(badge(t("已忽略")));
@@ -327,11 +400,24 @@
       paper.topics.forEach((topic) => tags.append(el("span", "topic-tag", topicLabel(topic))));
       card.append(tags);
     }
-    if (list(paper.reasons).length) {
-      const reasons = el("div", "reason-block");
-      reasons.append(el("span", "reason-label", t("为何相关")), el("p", "reason-text", i18n.language === "zh" ? paper.reasons.join("；") : `${t("命中词组")}: ${list(paper.matched_terms).join(", ")}`));
+    if (list(paper.reasons).length || paper.excluded) {
+      const reasons = el("div", `reason-block${paper.excluded ? " reason-block-excluded" : ""}`);
+      let explanation;
+      if (paper.excluded) explanation = exclusionSummary(paper);
+      else if (i18n.language === "zh") explanation = paper.reasons.join("；");
+      else {
+        const accepted = list(paper.topic_decisions).filter((decision) => decision.status === "matched");
+        const terms = accepted.length
+          ? [...new Set(accepted.flatMap((decision) => [...matchTerms(decision.title_terms), ...matchTerms(decision.abstract_terms)]))]
+          : matchTerms(paper.matched_terms);
+        explanation = `${t("命中词组")}: ${terms.join(", ")}`;
+        if (list(paper.topic_decisions).some((decision) => decision.status === "excluded")) explanation += `. ${t("部分主题被排除；详见匹配详情。")}`;
+      }
+      reasons.append(el("span", "reason-label", paper.excluded ? t("为何被排除") : t("为何相关")), el("p", "reason-text", explanation));
       card.append(reasons);
     }
+    const matching = matchingDetails(paper);
+    if (matching) card.append(matching);
     if (paper.assessment?.summary_zh) {
       const assessment = paper.assessment;
       const detail = el("details", "paper-detail");

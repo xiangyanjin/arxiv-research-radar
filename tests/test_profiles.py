@@ -45,7 +45,7 @@ class ProfileTests(unittest.TestCase):
         self.assertNotIn("Traceback", result.stderr)
         return result
 
-    def test_presets_have_explicit_anchors_and_cover_all_topic_categories(self):
+    def test_presets_cover_categories_and_use_intended_anchor_rules(self):
         self.assertEqual({p["id"] for p in list_presets()}, set(PRESET_IDS))
         for name in PRESET_IDS:
             with self.subTest(preset=name):
@@ -54,10 +54,15 @@ class ProfileTests(unittest.TestCase):
                 self.assertEqual(profile["own_arxiv_ids"], [])
                 self.assertEqual(profile["self_author_names"], [])
                 for topic in profile["topics"]:
-                    self.assertNotIn(topic["id"], ANCHORS)
-                    self.assertTrue(topic["anchors"])
+                    if name == "math-statistics":
+                        self.assertIn(topic["id"], ANCHORS)
+                        self.assertNotIn("anchors", topic)
+                    else:
+                        self.assertNotIn(topic["id"], ANCHORS)
+                        self.assertTrue(topic["anchors"])
                     self.assertTrue(set(topic["categories"]) <= set(profile["categories"]))
-                    candidate = {"title": topic["keywords"][0], "abstract": topic["anchors"][0],
+                    anchor = topic.get("anchors", ANCHORS.get(topic["id"]))[0]
+                    candidate = {"title": topic["keywords"][0], "abstract": anchor,
                                  "categories": topic["categories"], "authors": ["Example Author"]}
                     self.assertGreaterEqual(rank_paper(candidate, profile)["score"], profile["minimum_score"])
 

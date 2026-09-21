@@ -8,6 +8,8 @@ python3 -m radar evaluate examples/ranking-eval.json --profile config/profile.js
 
 Omit `--output` to print JSON. Omit `--profile` to use the usual environment/local/default profile selection. Supplying the bundled profile explicitly makes the bundled example reproducible even if you have a private profile override.
 
+To inspect how a proposed profile changes a fixed, **unlabeled** candidate list, use [`preview-profile`](profile-tuning.md) instead. Preview reports score and membership changes; `evaluate` needs explicit relevance labels to calculate metrics. Neither operation measures retrieval coverage.
+
 ## Dataset format
 
 ```json
@@ -34,7 +36,7 @@ Omit `--output` to print JSON. Omit `--profile` to use the usual environment/loc
 
 ## Metric definitions
 
-A case is recommended when its score reaches `minimum_score` and it is not excluded as the configured user's own paper. Ground truth comes only from `relevant`.
+A case is recommended when its score reaches `minimum_score`, it is not the configured user's own paper, and it is not excluded by the global or topic exclusion rules. Ground truth comes only from `relevant`. A configured exclusion does not turn a human relevance label into `false`; excluding a truly relevant case produces a false negative.
 
 | Metric | Definition |
 | --- | --- |
@@ -52,5 +54,7 @@ These measures describe **relevance decisions on the supplied candidate pool**. 
 ## Bundled fixtures and next evaluation step
 
 `examples/ranking-eval.json` contains 20 fictional cases written for the starter mathematics profile. They are a small regression suite, not held-out research data. Two deliberate challenges expose current limitations: a negated mention of random matrices can still match, and an eigenvalue paraphrase without configured keywords can be missed. The evaluator reports such failures; it does not change the ranking rules to hide them.
+
+Negative keywords have the same literal-matching limit: a negated mention of an excluded phrase can still remove a relevant paper. Normalization prevents duplicate spellings from inflating keyword counts, but does not add negation understanding or semantic retrieval. The separate six-record `profile-tuning-papers.json` example demonstrates configuration changes and has no relevance labels; it must not be reported as an accuracy evaluation.
 
 For a useful field evaluation, collect a dated sample of actual candidates including unrecommended ones, independently label relevance before reviewing model scores, document disagreements, and keep a held-out set separate from keyword tuning. Keep private annotations outside Git (for example in `data/`), and only publish metadata/labels you are authorized to share. No real-world accuracy claim is supplied by this project.

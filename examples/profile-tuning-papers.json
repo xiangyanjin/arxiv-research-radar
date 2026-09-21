@@ -1,0 +1,11 @@
+{
+  "source": "Six fictional metadata records for an offline configuration demonstration. These are not real papers or accuracy labels.",
+  "papers": [
+    {"id": "synthetic-tools", "title": "Tool calling for language model agents", "abstract": "We study tool calling by language model agents in a controlled environment.", "authors": ["Example Author"], "categories": ["cs.AI", "cs.CL"]},
+    {"id": "synthetic-medical", "title": "Web agents for medical diagnosis", "abstract": "We evaluate web agents on a medical diagnosis task.", "authors": ["Example Author"], "categories": ["cs.AI"]},
+    {"id": "synthetic-desktop", "title": "Desktop automation through visual feedback", "abstract": "An agent performs desktop automation from screenshots.", "authors": ["Example Author"], "categories": ["cs.AI", "cs.HC"]},
+    {"id": "synthetic-chemical", "title": "Chemical agent benchmarks for assays", "abstract": "The chemical agent benchmarks compare response patterns in assays.", "authors": ["Example Author"], "categories": ["cs.AI"]},
+    {"id": "synthetic-web", "title": "Web agents with screenshot grounding", "abstract": "We evaluate web agents that interact with visual interfaces.", "authors": ["Example Author"], "categories": ["cs.AI", "cs.HC"]},
+    {"id": "synthetic-unrelated", "title": "Financial time series forecasting", "abstract": "We compare autoregressive models for financial data.", "authors": ["Example Author"], "categories": ["q-fin.ST"]}
+  ]
+}
