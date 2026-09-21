@@ -63,7 +63,10 @@ class DemoSmokeTests(unittest.TestCase):
 
     def test_fresh_clone_serves_dashboard_and_rejects_cross_origin_access(self):
         self.load_demo()
-        process = subprocess.Popen([sys.executable, "-m", "radar", "serve", "--port", "0"],
+        startup = ("import faulthandler, runpy; "
+                   "faulthandler.dump_traceback_later(10); "
+                   "runpy.run_module('radar', run_name='__main__')")
+        process = subprocess.Popen([sys.executable, "-c", startup, "serve", "--port", "0"],
                                    cwd=self.clone, env={**self.env, "ARXIV_RADAR_DATA_DIR": "data/demo"},
                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         def stop():
