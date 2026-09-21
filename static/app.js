@@ -5,7 +5,75 @@
   const i18n = window.RadarI18n;
   const t = i18n.t;
   i18n.init();
-  const state = { view: "papers", topic: "", filter: "all", query: "", data: null, digest: "", poll: null, search: null, request: 0, lastRun: "", loadingScan: false, toast: null };
+  const state = { view: "papers", topic: "", filter: "all", query: "", sort: "relevance", data: null, digest: "", poll: null, search: null, request: 0, lastRun: "", loadingScan: false, toast: null, drafts: new Map(), notesOpen: new Set(), noteWidgets: new Map(), libraryPending: new Set(), draftStorageError: false };
+
+  const draftStorageKey = "arxiv-radar-note-drafts-v1";
+  try {
+    const stored = JSON.parse(sessionStorage.getItem(draftStorageKey) || "[]");
+    if (Array.isArray(stored)) stored.forEach((draft) => {
+      if (draft && typeof draft.id === "string" && typeof draft.text === "string" && typeof draft.baseText === "string" && draft.text !== draft.baseText) {
+        state.drafts.set(draft.id, { ...draft, saving: false, error: "" });
+        state.notesOpen.add(draft.id);
+      }
+    });
+  } catch { state.draftStorageError = true; }
+  function dirtyDrafts() { return [...state.drafts.values()].filter((draft) => draft.text !== draft.baseText); }
+  function persistDrafts() {
+    try {
+      sessionStorage.setItem(draftStorageKey, JSON.stringify(dirtyDrafts().map(({ id, title, text, baseText, version }) => ({ id, title, text, baseText, version }))));
+      state.draftStorageError = false;
+    } catch { state.draftStorageError = true; }
+    renderDraftNotice();
+  }
+  function renderDraftNotice() {
+    const notice = $("draft-notice");
+    if (!notice) return;
+    const drafts = dirtyDrafts();
+    notice.hidden = !drafts.length;
+    notice.replaceChildren();
+    if (!drafts.length) return;
+    const text = el("div");
+    text.append(el("strong", "", i18n.language === "zh" ? `${drafts.length} 篇论文有未保存笔记` : `Unsaved notes on ${drafts.length} ${drafts.length === 1 ? "paper" : "papers"}`));
+    text.append(el("p", "", state.draftStorageError ? t("草稿暂存在此标签页；浏览器无法备份，请保存后再关闭。") : t("切换页面、语言或筛选不会丢失草稿；本标签页刷新后也可恢复。")));
+    const list = el("div", "draft-list");
+    drafts.forEach((draft) => {
+      const button = el("button", "draft-jump", draft.title || draft.id);
+      button.title = t("返回这篇论文的草稿");
+      button.addEventListener("click", () => {
+        state.topic = ""; state.filter = "all"; state.query = ""; state.sort = "relevance";
+        $("search-input").value = ""; $("sort-select").value = state.sort;
+        renderTopics(); renderStatusFilters(); switchView("papers");
+        loadPapers({ focusDraft: draft.id });
+      });
+      list.append(button);
+    });
+    text.append(list); notice.append(icon("file"), text);
+  }
+  function viewQuery() {
+    return new URLSearchParams({ topic: state.topic, filter: state.filter, q: state.query, sort: state.sort });
+  }
+  function updateExports(disabled = false) {
+    const query = viewQuery(); query.set("scope", "view");
+    [["bib-link", "bib"], ["markdown-link", "markdown"]].forEach(([id, format]) => {
+      const a = $(id);
+      a.href = `/api/exports/${format}?${query}`;
+      a.setAttribute("aria-disabled", String(disabled));
+      a.tabIndex = disabled ? -1 : 0;
+    });
+  }
+  function rememberFocus() {
+    const active = document.activeElement;
+    return active?.dataset?.noteEditor ? { id: active.dataset.noteEditor, start: active.selectionStart, end: active.selectionEnd, scroll: active.scrollTop } : null;
+  }
+  function restoreNoteFocus(focus) {
+    if (!focus) return;
+    const editor = [...document.querySelectorAll("[data-note-editor]")].find((node) => node.dataset.noteEditor === focus.id);
+    if (!editor) return;
+    editor.focus({ preventScroll: true });
+    editor.setSelectionRange(focus.start ?? editor.value.length, focus.end ?? editor.value.length);
+    editor.scrollTop = focus.scroll || 0;
+  }
+
   const viewText = () => ({
     papers: [t("保持好奇，持续发现"), t("把相关研究，留在视野里。"), t("关注你的研究方向，从 arXiv 的新论文与更新中寻找值得读的工作。")],
     digest: [t("从线索到阅读"), t("留一点时间，给新的想法。"), t("一份可追溯的研究简报。初筛提供线索，结论仍需回到论文中核实。")],
@@ -137,6 +205,7 @@
     $("stat-new").textContent = count(stats.new);
     $("stat-updates").textContent = count(stats.updates);
     $("stat-saved").textContent = count(stats.saved);
+    $("library-stats").textContent = i18n.language === "zh" ? `已读 ${count(stats.read)} · 有笔记 ${count(stats.notes)}` : `${count(stats.read)} read · ${count(stats.notes)} with notes`;
     $("nav-count").textContent = count(stats.relevant);
     $("overview-title").textContent = t("与你的方向保持连接");
     const run = data.latest_run;
@@ -177,7 +246,7 @@
   }
   function selectTopic(id) { state.topic = id; renderTopics(); loadPapers(); }
   function resetFilters() {
-    state.topic = ""; state.filter = "all"; state.query = ""; $("search-input").value = "";
+    state.topic = ""; state.filter = "all"; state.query = ""; state.sort = "relevance"; $("search-input").value = ""; $("sort-select").value = state.sort;
     renderTopics(); renderStatusFilters(); loadPapers();
   }
   function renderStatusFilters() {
@@ -219,14 +288,18 @@
   }
   function badge(text, kind = "") { return el("span", `badge${kind ? ` badge-${kind}` : ""}`, text); }
   function paperCard(paper) {
-    const card = el("article", `paper-card${paper.feedback === "read" ? " is-read" : ""}`);
+    const saved = typeof paper.saved === "boolean" ? paper.saved : paper.feedback === "saved";
+    const read = typeof paper.read === "boolean" ? paper.read : paper.feedback === "read";
+    const hidden = typeof paper.hidden === "boolean" ? paper.hidden : paper.feedback === "irrelevant";
+    const card = el("article", `paper-card${read ? " is-read" : ""}`);
+    card.dataset.paperId = paper.id;
     const top = el("div", "paper-topline");
     if (paper.last_event === "new") top.append(badge(t("新发现"), "new"));
     if (["update", "updated"].includes(paper.last_event)) top.append(badge(t("版本更新"), "update"));
     if (paper.is_own) top.append(badge(t("本人论文"), "own"));
-    if (paper.feedback === "saved") top.append(badge(t("已收藏"), "saved"));
-    if (paper.feedback === "read") top.append(badge(t("已读过"), "read"));
-    if (paper.feedback === "irrelevant") top.append(badge(t("已忽略")));
+    if (saved) top.append(badge(t("已收藏"), "saved"));
+    if (read) top.append(badge(t("已读过"), "read"));
+    if (hidden) top.append(badge(t("已忽略")));
     top.append(badge(paper.assessment?.summary_zh ? t("已有摘要解读") : t("规则初筛"), paper.assessment?.summary_zh ? "model" : ""));
     const categories = list(paper.categories);
     if (categories.length) top.append(el("span", "paper-meta-category", categories.join(" · ")));
@@ -281,43 +354,157 @@
     if (safeURL(paper.url)) { const original = link(t("arXiv 原文"), paper.url, "paper-link"); original.append(icon("arrow")); links.append(original); }
     if (safeURL(paper.pdf_url)) { const pdf = link("PDF", paper.pdf_url, "paper-link"); pdf.append(icon("arrow")); links.append(pdf); }
     const actions = el("div", "feedback-actions");
-    [["saved", t("收藏"), "bookmark"], ["read", t("读过"), "check"], ["irrelevant", t("忽略"), "hide"]].forEach(([feedback, label, iconName]) => {
-      const selected = paper.feedback === feedback;
+    [["saved", saved, t("收藏"), t("已收藏"), "bookmark"], ["read", read, t("读过"), t("已读过"), "check"], ["hidden", hidden, t("忽略"), t("已忽略"), "hide"]].forEach(([field, selected, label, selectedLabel, iconName]) => {
       const button = el("button", `feedback-button${selected ? " selected" : ""}`);
-      button.append(icon(iconName), el("span", "", selected ? ({ saved: t("已收藏"), read: t("已读过"), irrelevant: t("已忽略") }[feedback]) : label));
+      const pendingKey = `${paper.id}:${field}`;
+      button.dataset.library = field;
+      button.append(icon(iconName), el("span", "", selected ? selectedLabel : label));
       button.setAttribute("aria-pressed", String(selected));
-      button.title = i18n.language === "zh" ? (selected ? `取消${label}` : `标记为${label}（替换当前标记）`) : (selected ? `Clear ${label.toLowerCase()} status` : `Mark ${label.toLowerCase()} (replaces current status)`);
+      button.disabled = state.libraryPending.has(pendingKey);
+      button.title = i18n.language === "zh" ? (selected ? `取消${label}` : `标记为${label}（独立状态）`) : (selected ? `Clear ${label.toLowerCase()} status` : `Mark ${label.toLowerCase()} (independent status)`);
       button.setAttribute("aria-label", `${button.title}: ${paper.title}`);
       button.addEventListener("click", async () => {
-        actions.querySelectorAll("button").forEach((item) => { item.disabled = true; });
+        if (state.libraryPending.has(pendingKey)) return;
+        state.libraryPending.add(pendingKey); button.disabled = true;
         try {
-          await api("/api/feedback", { method: "POST", body: JSON.stringify({ id: paper.id, feedback: selected ? "" : feedback }) });
-          toast(i18n.language === "zh" ? (selected ? `已取消${label}` : `已标记为${label}`) : (selected ? "Reading status cleared." : "Reading status updated."));
+          await api("/api/library", { method: "POST", body: JSON.stringify({ id: paper.id, [field]: !selected }) });
+          toast(t("阅读状态已更新，其他标记保持不变。"));
+        } catch (error) { toast(error.message, true); }
+        finally {
+          state.libraryPending.delete(pendingKey);
           await Promise.all([loadPapers({ quiet: true }), loadState({ quiet: true })]);
-        } catch (error) { toast(error.message, true); actions.querySelectorAll("button").forEach((item) => { item.disabled = false; }); }
+        }
       });
       actions.append(button);
     });
-    bottom.append(links, actions); card.append(bottom);
+    bottom.append(links, actions); card.append(bottom, noteEditor(paper));
     return card;
   }
-  async function loadPapers({ quiet = false } = {}) {
+  function showRetainedDraft(id) {
+    const draft = state.drafts.get(id);
+    if (!draft) return;
+    const wrapper = el("article", "paper-card retained-draft");
+    wrapper.append(el("h3", "paper-title", draft.title || id), el("p", "note-status", t("这篇论文不在当前结果中；草稿仍可编辑或另存到本地论文库。")));
+    wrapper.append(noteEditor({ id, title: draft.title || id, version: draft.version, notes: draft.baseText }));
+    $("paper-list").prepend(wrapper); restoreNoteFocus({ id });
+  }
+  function noteEditor(paper) {
+    const details = el("details", "paper-detail note-editor");
+    details.dataset.notesFor = paper.id;
+    const summary = el("summary", "", t("阅读笔记"));
+    details.append(summary);
+    const savedNotes = typeof paper.notes === "string" ? paper.notes : "";
+    let draft = state.drafts.get(paper.id);
+    if (draft && !draft.saving && draft.text === draft.baseText) { state.drafts.delete(paper.id); draft = null; }
+    details.open = Boolean(draft) || state.notesOpen.has(paper.id);
+    details.addEventListener("toggle", () => {
+      if (details.open) state.notesOpen.add(paper.id); else state.notesOpen.delete(paper.id);
+    });
+    const body = el("div", "note-body");
+    const metadata = el("p", "note-metadata");
+    const parts = [];
+    if (paper.notes_version != null && savedNotes) {
+      parts.push(i18n.language === "zh" ? `已保存笔记来自 v${paper.notes_version}` : `Saved notes from v${paper.notes_version}`);
+      if (paper.notes_version !== paper.version) parts.push(i18n.language === "zh" ? `当前论文为 v${paper.version}，请核对笔记` : `Current paper: v${paper.version}; review your notes`);
+    }
+    if (paper.notes_updated_at && savedNotes) parts.push(`${date(paper.notes_updated_at, true)} · ${timeZone()}`);
+    metadata.textContent = parts.join(" · ");
+    const label = el("label", "note-label", t("你的阅读记录（纯文本）"));
+    const textarea = el("textarea", "note-textarea");
+    textarea.id = `notes-${paper.id.replace(/[^A-Za-z0-9_-]/g, "-")}`;
+    textarea.dataset.noteEditor = paper.id;
+    textarea.rows = 5;
+    textarea.value = draft?.text ?? savedNotes;
+    textarea.placeholder = t("记录关键假设、疑问或下一步阅读计划…");
+    textarea.setAttribute("aria-label", `${t("阅读笔记")}: ${paper.title}`);
+    label.htmlFor = textarea.id;
+    metadata.id = `${textarea.id}-meta`;
+    const status = el("p", "note-status"); status.id = `${textarea.id}-status`; status.setAttribute("role", "status");
+    const error = el("p", "note-error"); error.id = `${textarea.id}-error`; error.setAttribute("role", "alert"); error.hidden = true;
+    textarea.setAttribute("aria-describedby", `${metadata.id} ${status.id} ${error.id}`);
+    const controls = el("div", "note-controls");
+    const save = el("button", "button button-primary note-save", t("保存笔记"));
+    const cancel = el("button", "button button-secondary note-cancel", t("放弃修改"));
+    const length = el("span", "note-length");
+    controls.append(save, cancel, length);
+    body.append(metadata, label, textarea, status, error, controls); details.append(body);
+    function refresh() {
+      const current = state.drafts.get(paper.id);
+      const dirty = Boolean(current && current.text !== current.baseText);
+      const characters = [...textarea.value].length;
+      save.disabled = !dirty || Boolean(current?.saving) || characters > 5000;
+      cancel.disabled = !dirty || Boolean(current?.saving);
+      save.textContent = current?.saving ? t("正在保存…") : t("保存笔记");
+      length.textContent = `${count(characters)} / 5,000`;
+      length.classList.toggle("is-over-limit", characters > 5000);
+      textarea.setAttribute("aria-invalid", String(characters > 5000));
+      status.textContent = current?.saving ? t("正在保存；此时继续输入的文字会保留为新草稿。") : dirty ? t("尚未保存 · 切换筛选或语言时保留草稿") : savedNotes ? t("笔记已保存到本地论文库。") : t("最多 5,000 字符；保存后可搜索与导出。 ");
+      if (dirty && current.version != null && current.version !== paper.version) status.textContent += i18n.language === "zh" ? ` 草稿起于 v${current.version}；当前论文为 v${paper.version}。` : ` Draft started on v${current.version}; current paper is v${paper.version}.`;
+      error.textContent = characters > 5000 ? t("笔记超过 5,000 字符，请缩短后保存；文字仍已保留。") : current?.error || "";
+      error.hidden = !error.textContent;
+      summary.textContent = dirty ? `${t("阅读笔记")} · ${t("未保存")}` : savedNotes ? `${t("阅读笔记")} · ${t("已保存")}` : t("阅读笔记");
+      details.classList.toggle("has-unsaved-notes", dirty);
+    }
+    state.noteWidgets.set(paper.id, { refresh, textarea });
+    textarea.addEventListener("input", () => {
+      let current = state.drafts.get(paper.id);
+      if (!current) {
+        current = { id: paper.id, title: paper.title, text: savedNotes, baseText: savedNotes, version: paper.version, saving: false, error: "" };
+        state.drafts.set(paper.id, current);
+      }
+      current.text = textarea.value; current.error = "";
+      persistDrafts(); refresh();
+    });
+    cancel.addEventListener("click", () => {
+      const current = state.drafts.get(paper.id);
+      if (current?.saving) return;
+      textarea.value = current?.baseText ?? savedNotes;
+      state.drafts.delete(paper.id); persistDrafts(); refresh();
+      toast(t("已放弃未保存的修改。"));
+    });
+    save.addEventListener("click", async () => {
+      const current = state.drafts.get(paper.id);
+      if (!current || current.saving || [...current.text].length > 5000) return;
+      const submitted = current.text;
+      current.saving = true; current.error = ""; refresh();
+      try {
+        const result = await api("/api/library", { method: "POST", body: JSON.stringify({ id: paper.id, notes: submitted }) });
+        current.baseText = result.paper?.notes ?? submitted; current.version = result.paper?.notes_version ?? current.version; current.saving = false;
+        if (current.text === current.baseText) state.drafts.delete(paper.id);
+        persistDrafts(); toast(t("笔记已保存。"));
+        await Promise.all([loadPapers({ quiet: true }), loadState({ quiet: true })]);
+      } catch (failure) {
+        current.saving = false; current.error = `${t("保存失败，草稿已保留。 ")}${failure.message}`;
+        persistDrafts(); state.noteWidgets.get(paper.id)?.refresh(); toast(t("保存失败，草稿已保留。 "), true);
+      }
+    });
+    textarea.addEventListener("keydown", (event) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") { event.preventDefault(); if (!save.disabled) save.click(); }
+    });
+    refresh(); return details;
+  }
+  async function loadPapers({ quiet = false, focusDraft = "" } = {}) {
+
     const request = ++state.request;
     const container = $("paper-list");
     container.setAttribute("aria-busy", "true");
+    updateExports(true);
     if (!quiet) loading(container, t("正在整理研究线索"));
     try {
-      const query = new URLSearchParams({ filter: state.filter });
-      if (state.topic) query.set("topic", state.topic);
-      if (state.query) query.set("q", state.query);
+      const query = viewQuery();
       const response = await api(`/api/papers?${query}`);
       if (request !== state.request) return;
       const papers = list(response.papers);
+      const focus = rememberFocus();
+      state.noteWidgets.clear();
       $("results-count").textContent = `${count(response.total ?? papers.length)} ${i18n.language === "zh" ? "篇" : "papers"}`;
       if (!papers.length) {
         const filtered = Boolean(state.topic || state.query || state.filter !== "all");
         const messages = {
           saved: [t("给值得读的论文留一个位置"), t("点击论文上的收藏按钮，就能在这里继续阅读。")],
+          read: [t("当前没有已读论文"), t("将论文标为已读，阅读记录会独立于收藏保存。")],
+          unread: [t("当前没有未读论文"), t("清除筛选查看全部线索，或开始一次新的扫描。")],
+          notes: [t("当前没有保存的笔记"), t("展开论文的阅读笔记并保存，即可在这里找到。")],
           hidden: [t("这里还没有被忽略的论文"), t("不相关的线索可以标记为忽略，也可以在这里恢复。")],
           new: [t("当前没有本次新增记录"), t("以最近一次实际完成的扫描结果为准；扫描异常时请查看覆盖范围。")],
           updates: [t("当前没有版本更新记录"), t("扫描会跟踪已经收录论文的修订版本。")]
@@ -327,8 +514,12 @@
         else if (state.data?.latest_run) [heading, description] = [t("当前论文库没有相关记录"), t("这不代表 arXiv 没有相关研究；可查看扫描状态和覆盖范围，或再次扫描。")];
         empty(container, heading, description, state.filter === "saved" ? "bookmark" : "radar", filtered ? { label: t("查看全部线索"), run: resetFilters } : undefined);
       } else container.replaceChildren(...papers.map(paperCard));
+      restoreNoteFocus(focusDraft ? { id: focusDraft } : focus);
+      if (focusDraft && !state.noteWidgets.has(focusDraft)) showRetainedDraft(focusDraft);
+      updateExports(false);
     } catch (error) {
-      if (request === state.request) { empty(container, t("论文暂时未能载入"), error.message, "info", { label: t("重新加载"), run: () => loadPapers() }); $("results-count").textContent = ""; }
+      if (request === state.request) { empty(container, t("论文暂时未能载入"), error.message, "info", { label: t("重新加载"), run: () => loadPapers() });
+        if (focusDraft) showRetainedDraft(focusDraft); $("results-count").textContent = ""; }
     } finally { if (request === state.request) container.setAttribute("aria-busy", "false"); }
   }
   async function scan() {
@@ -454,6 +645,7 @@
   $("today-label").textContent = `${date(new Date().toISOString())} · ${timeZone()}`;
   document.querySelectorAll("[data-language]").forEach((button) => button.addEventListener("click", () => {
     i18n.setLanguage(button.dataset.language);
+    renderDraftNotice();
     if (state.data) updateStats();
     renderTopics(); renderNotice(); setScanButton(); switchView(state.view); loadPapers({ quiet: true });
   }));
@@ -463,7 +655,20 @@
   $("copy-digest").addEventListener("click", copyDigest);
   document.querySelectorAll(".nav-item").forEach((button) => button.addEventListener("click", () => switchView(button.dataset.view)));
   document.querySelectorAll(".status-filter").forEach((button) => button.addEventListener("click", () => { state.filter = button.dataset.filter; renderStatusFilters(); loadPapers(); }));
-  $("search-input").addEventListener("input", () => { clearTimeout(state.search); state.search = setTimeout(() => { state.query = $("search-input").value.trim(); loadPapers(); }, 250); });
+  $("search-input").addEventListener("input", () => {
+    clearTimeout(state.search); state.query = $("search-input").value.trim();
+    ++state.request; updateExports(true);
+    state.search = setTimeout(() => loadPapers(), 250);
+  });
+  $("sort-select").addEventListener("change", () => { state.sort = $("sort-select").value; loadPapers(); });
+  ["bib-link", "markdown-link"].forEach((id) => $(id).addEventListener("click", (event) => {
+    if ($(id).getAttribute("aria-disabled") === "true") { event.preventDefault(); return; }
+    if (dirtyDrafts().length) toast(t("导出仅包含已保存的笔记，不包含未保存草稿。"));
+  }));
+  window.addEventListener("beforeunload", (event) => {
+    if (dirtyDrafts().length) { persistDrafts(); event.preventDefault(); event.returnValue = ""; }
+  });
+  renderDraftNotice(); updateExports(true);
   document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") loadState({ quiet: true }); });
   loadState().catch(() => {}).finally(() => loadPapers());
 })();

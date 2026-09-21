@@ -1,0 +1,287 @@
+{
+  "name": "Starter math profile regression cases",
+  "kind": "synthetic",
+  "description": "20 hand-authored fictional metadata examples labeled for the bundled mathematics profile. Includes keyword ambiguity, a negation trap and a relevant paraphrase without configured keywords. Labels are design judgments, not independently annotated research data. Do not report these metrics as real-world accuracy.",
+  "cases": [
+    {
+      "relevant": true,
+      "paper": {
+        "id": "fixture:matrix-strong",
+        "title": "Strong convergence of random matrices",
+        "abstract": "We study operator norm convergence for matrix products under a finite fourth moment.",
+        "authors": [
+          "Synthetic fixture"
+        ],
+        "categories": [
+          "math.PR"
+        ]
+      }
+    },
+    {
+      "relevant": true,
+      "paper": {
+        "id": "fixture:matrix-free",
+        "title": "Free probability and spectral approximation",
+        "abstract": "We compare spectra of random matrices with free probability limits.",
+        "authors": [
+          "Synthetic fixture"
+        ],
+        "categories": [
+          "math.FA"
+        ]
+      }
+    },
+    {
+      "relevant": true,
+      "paper": {
+        "id": "fixture:matrix-nonhermitian",
+        "title": "Universality for non-Hermitian random matrices",
+        "abstract": "We compare spectral statistics under moment assumptions.",
+        "authors": [
+          "Synthetic fixture"
+        ],
+        "categories": [
+          "math.PR"
+        ]
+      }
+    },
+    {
+      "relevant": true,
+      "paper": {
+        "id": "fixture:matrix-semantic-gap",
+        "title": "Largest eigenvalues of independent Gaussian arrays",
+        "abstract": "We study the limiting edge fluctuations of large symmetric arrays whose entries are independent Gaussian variables above the diagonal.",
+        "authors": [
+          "Synthetic fixture"
+        ],
+        "categories": [
+          "math.PR"
+        ]
+      }
+    },
+    {
+      "relevant": true,
+      "paper": {
+        "id": "fixture:tensor-pca",
+        "title": "Warm starts for spiked tensor PCA",
+        "abstract": "We analyze alternating power iteration and tensor estimation in a high-dimensional inference problem.",
+        "authors": [
+          "Synthetic fixture"
+        ],
+        "categories": [
+          "stat.ML"
+        ]
+      }
+    },
+    {
+      "relevant": true,
+      "paper": {
+        "id": "fixture:tensor-statistics",
+        "title": "Statistical limits of tensor decomposition",
+        "abstract": "We establish estimation bounds for a noisy low-rank tensor model.",
+        "authors": [
+          "Synthetic fixture"
+        ],
+        "categories": [
+          "math.ST"
+        ]
+      }
+    },
+    {
+      "relevant": true,
+      "paper": {
+        "id": "fixture:markov-mixing",
+        "title": "Mixing time of a Markov chain",
+        "abstract": "We bound the spectral gap of heat bath dynamics.",
+        "authors": [
+          "Synthetic fixture"
+        ],
+        "categories": [
+          "math.PR"
+        ]
+      }
+    },
+    {
+      "relevant": true,
+      "paper": {
+        "id": "fixture:markov-occupation",
+        "title": "Sliding-window occupation counts",
+        "abstract": "Conditionally resampled occupation counts define a Markov chain with a quantitative spectral gap.",
+        "authors": [
+          "Synthetic fixture"
+        ],
+        "categories": [
+          "math.ST"
+        ]
+      }
+    },
+    {
+      "relevant": true,
+      "paper": {
+        "id": "fixture:markov-poincare",
+        "title": "Poincaré inequalities for conditional resampling",
+        "abstract": "We derive a functional inequality controlling convergence to equilibrium.",
+        "authors": [
+          "Synthetic fixture"
+        ],
+        "categories": [
+          "math.FA"
+        ]
+      }
+    },
+    {
+      "relevant": true,
+      "paper": {
+        "id": "fixture:concentration-kls",
+        "title": "The KLS conjecture and stochastic localization",
+        "abstract": "We study concentration of measure for log-concave distributions.",
+        "authors": [
+          "Synthetic fixture"
+        ],
+        "categories": [
+          "math.PR"
+        ]
+      }
+    },
+    {
+      "relevant": true,
+      "paper": {
+        "id": "fixture:concentration-cube",
+        "title": "Transport inequalities on the Boolean cube",
+        "abstract": "We relate reverse heat couplings to concentration inequalities.",
+        "authors": [
+          "Synthetic fixture"
+        ],
+        "categories": [
+          "math.FA"
+        ]
+      }
+    },
+    {
+      "relevant": false,
+      "paper": {
+        "id": "fixture:negative-photonics",
+        "title": "Spectral gaps in photonic crystals",
+        "abstract": "We tune a photonic band structure and measure the optical spectral gap.",
+        "authors": [
+          "Synthetic fixture"
+        ],
+        "categories": [
+          "physics.optics"
+        ]
+      }
+    },
+    {
+      "relevant": false,
+      "paper": {
+        "id": "fixture:negative-semiconductor",
+        "title": "Gap engineering in semiconductor films",
+        "abstract": "We compare material band gaps at different temperatures.",
+        "authors": [
+          "Synthetic fixture"
+        ],
+        "categories": [
+          "cond-mat.mtrl-sci"
+        ]
+      }
+    },
+    {
+      "relevant": false,
+      "paper": {
+        "id": "fixture:negative-window",
+        "title": "Sliding window detection for aerial images",
+        "abstract": "A sliding window image detector processes large photographs.",
+        "authors": [
+          "Synthetic fixture"
+        ],
+        "categories": [
+          "cs.CV"
+        ]
+      }
+    },
+    {
+      "relevant": false,
+      "paper": {
+        "id": "fixture:negative-generic-ml",
+        "title": "A generic prediction model",
+        "abstract": "We train a neural model on a supervised classification dataset.",
+        "authors": [
+          "Synthetic fixture"
+        ],
+        "categories": [
+          "cs.LG"
+        ]
+      }
+    },
+    {
+      "relevant": false,
+      "paper": {
+        "id": "fixture:negative-warm-start",
+        "title": "Warm start schedules for neural training",
+        "abstract": "We compare warm start strategies for a language classifier.",
+        "authors": [
+          "Synthetic fixture"
+        ],
+        "categories": [
+          "cs.LG"
+        ]
+      }
+    },
+    {
+      "relevant": false,
+      "paper": {
+        "id": "fixture:negative-compression",
+        "title": "Tensor decomposition for video compression",
+        "abstract": "We use tensor decomposition to compress video frames and measure reconstruction quality.",
+        "authors": [
+          "Synthetic fixture"
+        ],
+        "categories": [
+          "eess.IV"
+        ]
+      }
+    },
+    {
+      "relevant": false,
+      "paper": {
+        "id": "fixture:negative-universality",
+        "title": "Universality of online social patterns",
+        "abstract": "We describe universality across social communication networks without spectral analysis.",
+        "authors": [
+          "Synthetic fixture"
+        ],
+        "categories": [
+          "cs.CY"
+        ]
+      }
+    },
+    {
+      "relevant": false,
+      "paper": {
+        "id": "fixture:negative-negation",
+        "title": "Terminology in technical abstracts",
+        "abstract": "This linguistic study counts vocabulary usage. We do not study random matrices or free probability; these are merely example phrases in a writing survey.",
+        "authors": [
+          "Synthetic fixture"
+        ],
+        "categories": [
+          "cs.CY"
+        ]
+      }
+    },
+    {
+      "relevant": false,
+      "paper": {
+        "id": "fixture:negative-category-only",
+        "title": "A renewal identity",
+        "abstract": "We establish an elementary identity for a renewal process with no result about the configured research topics.",
+        "authors": [
+          "Synthetic fixture"
+        ],
+        "categories": [
+          "math.PR"
+        ]
+      }
+    }
+  ]
+}

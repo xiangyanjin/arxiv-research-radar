@@ -9,6 +9,7 @@ import uuid
 from functools import lru_cache
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from urllib.parse import quote, urlsplit
 
 from .store import Store
 from .ranking import rank_paper
@@ -183,7 +184,13 @@ class Radar:
     def is_relevant(self, paper):
         return paper["score"] >= self.profile.get("minimum_score", 20) and not paper["is_own"]
 
-    def papers(self, topic="", filter="all", q="", run_id=None, include_hidden=False, include_low=False):
+    def papers(self, topic="", filter="all", q="", run_id=None, include_hidden=False, include_low=False, sort="relevance"):
+        filter = filter or "all"
+        sort = sort or "relevance"
+        if filter not in ("all", "new", "updates", "saved", "read", "unread", "notes", "hidden"):
+            raise ValueError("未知论文筛选条件")
+        if sort not in ("relevance", "newest", "title"):
+            raise ValueError("未知论文排序方式")
         if run_id is None:
             latest = next((r for r in self.store.runs() if r["status"] in ("success", "partial")), None)
             run_id = latest["id"] if latest else None
@@ -193,36 +200,53 @@ class Radar:
         for p in papers:
             ranking_input = {k: p.get(k) for k in ("id", "title", "abstract", "categories", "authors")}
             p.update(cached_rank(json.dumps(ranking_input, sort_keys=True, ensure_ascii=False), profile_json))
-        if not include_low:
+        # Managed library items remain reachable when a profile changes or its
+        # relevance threshold rises. Discovery views still follow that profile.
+        if not include_low and filter not in ("saved", "read", "notes", "hidden"):
             papers = [p for p in papers if self.is_relevant(p)]
         if filter == "hidden":
-            papers = [p for p in papers if p["feedback"] == "irrelevant"]
+            papers = [p for p in papers if p["hidden"]]
         elif not include_hidden:
-            papers = [p for p in papers if p["feedback"] != "irrelevant"]
+            papers = [p for p in papers if not p["hidden"]]
         if filter in ("new", "updates"):
             papers = [p for p in papers if p["last_event"] == ("updated" if filter == "updates" else "new")]
-        elif filter == "saved":
-            papers = [p for p in papers if p["feedback"] == "saved"]
+        elif filter in ("saved", "read"):
+            papers = [p for p in papers if p[filter]]
+        elif filter == "unread":
+            papers = [p for p in papers if not p["read"]]
+        elif filter == "notes":
+            papers = [p for p in papers if p["notes"].strip()]
         if topic:
             papers = [p for p in papers if topic in [t["id"] for t in p["topics"]]]
         if q:
-            papers = [p for p in papers if q.casefold() in (p["title"] + " " + p["abstract"] + " " + " ".join(p["authors"])).casefold()]
-        papers.sort(key=lambda p: (p["score"], p.get("updated") or p.get("announced") or p.get("published", ""), p["id"]), reverse=True)
+            papers = [p for p in papers if q.casefold() in (p["title"] + " " + p["abstract"] + " " + " ".join(p["authors"]) + " " + p["notes"]).casefold()]
+        def date_key(paper):
+            value = paper.get("updated") or paper.get("announced") or paper.get("published")
+            return parse_time(value).timestamp() if value else float("-inf")
+        if sort == "title":
+            papers.sort(key=lambda p: (p["title"].casefold(), p["id"]))
+        elif sort == "newest":
+            papers.sort(key=lambda p: (date_key(p), p["score"], p["id"]), reverse=True)
+        else:
+            papers.sort(key=lambda p: (p["score"], date_key(p), p["id"]), reverse=True)
         return papers
 
     def state(self):
         all_papers = self.papers(include_hidden=True, include_low=True)
-        relevant = [p for p in all_papers if self.is_relevant(p) and p["feedback"] != "irrelevant"]
+        visible = [p for p in all_papers if not p["hidden"]]
+        relevant = [p for p in visible if self.is_relevant(p)]
         return {"profile": self.profile, "latest_run": self.latest(), "scanning": self.scanning(),
                 "stats": {"papers": len(all_papers), "relevant": len(relevant),
                           "new": sum(p["last_event"] == "new" for p in relevant),
                           "updates": sum(p["last_event"] == "updated" for p in relevant),
-                          "saved": sum(p["feedback"] == "saved" for p in all_papers)},
+                          "saved": sum(p["saved"] for p in visible),
+                          "read": sum(p["read"] for p in visible),
+                          "notes": sum(bool(p["notes"].strip()) for p in visible)},
                 "topics": self.profile["topics"],
                 "notice": "基于标题与摘要进行方向匹配；相关性分数不代表论文质量或证明正确性。定时扫描需自行配置，启动服务不会自动启用定时任务。"}
 
     def review_queue(self):
-        papers = [p for p in self.papers() if not p["assessment"] and p["feedback"] != "read"]
+        papers = [p for p in self.papers() if not p["assessment"] and not p["read"]]
         return {"evidence_level": "abstract", "instruction": "仅依据提供的摘要解读；不得声称阅读全文或验证证明。证据引文必须逐字来自 abstract。", "papers": papers[:self.profile.get("digest_limit", 8)]}
 
     def delivery_plan(self):
@@ -315,13 +339,72 @@ class Radar:
         write_json(path / "latest.json", result)
         return result
 
-    def bibtex(self):
+    def bibtex(self, scope="", **view):
         def esc(value):
             return re.sub(r"([{}%&#_])", r"\\\1", value.replace("\\", " "))
-        selected = self.papers(filter="saved") or self.papers()[:self.profile.get("digest_limit", 8)]
+        if scope not in ("", "view"):
+            raise ValueError("未知导出范围")
+        selected = self.papers(**view) if scope == "view" else self.papers(filter="saved") or self.papers()[:self.profile.get("digest_limit", 8)]
         blocks = []
         for p in selected:
             year = (p.get("published") or p.get("announced") or p["first_seen"])[:4]
             blocks.append("@misc{arxiv" + p["id"].replace(".", "").replace("/", "") + ",\n" +
                           f"  title = {{{esc(p['title'])}}},\n  author = {{{' and '.join(esc(a) for a in p['authors'])}}},\n  year = {{{year}}},\n  eprint = {{{p['id']}}},\n  archivePrefix = {{arXiv}},\n  url = {{{p['url']}}}\n}}")
         return "\n\n".join(blocks) + "\n"
+
+    def markdown(self, scope="view", **view):
+        """Export precisely one library view; user text remains literal text."""
+        if scope not in ("", "view"):
+            raise ValueError("未知导出范围")
+        selected = self.papers(**view)
+
+        def inline(value):
+            return re.sub(r"([\\`*_{}\[\]<>()#+.!|~-])", r"\\\1", str(value)).replace("\n", " ")
+
+        def literal(value):
+            # A note may contain HTML or Markdown fences. Use a longer fence
+            # than any supplied backtick run, preserving its text verbatim.
+            width = max([2] + [len(match) for match in re.findall(r"`+", value)]) + 1
+            fence = "`" * width
+            return [fence + "text", value, fence]
+
+        def link(label, value):
+            # Source adapters normally produce canonical arXiv URLs. Retain a
+            # safe text fallback for older or manually imported metadata too.
+            try:
+                parsed = urlsplit(value)
+                valid = parsed.scheme == "https" and parsed.hostname == "arxiv.org" and not parsed.username
+            except (TypeError, ValueError):
+                valid = False
+            return f"[{label}]({quote(value, safe=':/?=&%#')})" if valid else inline(label + ": " + str(value))
+
+        lines = ["# Research library export / 阅读库导出", "", f"Papers / 论文数: {len(selected)}", "",
+                 "Paper metadata and abstracts are source material. User notes are separate personal annotations; neither verifies a paper's claims.", "",
+                 "## Selection / 筛选条件", ""]
+        lines += literal(json.dumps({key: view.get(key, default) for key, default in
+                                    (("topic", ""), ("filter", "all"), ("q", ""), ("sort", "relevance"))}, ensure_ascii=False))
+        for paper in selected:
+            version = f"v{paper['version']}" if paper["version"] else " (version unavailable)"
+            lines += ["", f"## {inline(paper['title'])}", "",
+                      f"- arXiv: {inline(paper['id'])}{version}",
+                      f"- Authors / 作者: {inline('; '.join(paper['authors']))}",
+                      f"- Categories / 分类: {inline(', '.join(paper['categories']))}",
+                      f"- Source / 来源: {inline(paper.get('source', ''))}",
+                      f"- First submitted / 首稿日期: {inline(paper.get('published') or 'not provided')}",
+                      f"- Revision submitted / 修订日期: {inline(paper.get('updated') or 'not provided')}"]
+            if paper.get("announced"):
+                lines.append(f"- Announcement / 公告日期: {inline(paper['announced'])} (not a submission date)")
+            lines += [f"- Reading state / 阅读状态: saved={paper['saved']}, read={paper['read']}, hidden={paper['hidden']}",
+                      "", link("arXiv", paper["url"]) + " · " + link("PDF", paper["pdf_url"]), "",
+                      "### Original abstract / 原始摘要", ""]
+            lines += literal(paper["abstract"])
+            lines += ["", "### User notes / 用户笔记", ""]
+            if paper["notes"].strip():
+                lines += [f"Notes saved for version / 笔记对应版本: {paper['notes_version']}",
+                          f"Updated (UTC) / 笔记更新时间: {paper['notes_updated_at']}", ""]
+                if paper["notes_version"] != paper["version"]:
+                    lines += ["These notes were saved for a different paper version. / 笔记对应旧版本，请结合当前版本复核。", ""]
+                lines += literal(paper["notes"])
+            else:
+                lines += ["No notes / 暂无笔记"]
+        return "\n".join(lines).rstrip() + "\n"

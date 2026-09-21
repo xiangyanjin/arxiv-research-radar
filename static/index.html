@@ -57,6 +57,7 @@
 
     <div id="global-notice" class="notice" role="status" hidden></div>
     <div id="connection-error" class="notice notice-error" role="alert" hidden></div>
+    <div id="draft-notice" class="notice notice-drafts" role="status" hidden></div>
 
     <section class="view" id="view-papers" aria-label="论文研究动态">
       <div class="overview">
@@ -67,16 +68,21 @@
         <div class="metric"><span>我的收藏</span><strong id="stat-saved">—</strong><small>留待阅读</small></div>
       </div>
 
-      <div class="papers-toolbar"><div><h2>论文线索 <span id="results-count" class="count-label"></span></h2><p>主题相关度基于标题、摘要与分类，不代表论文质量或证明正确性。</p></div><a class="button button-plain" id="bib-link" href="/api/exports/bib" download="research-radar.bib" title="优先导出收藏；没有收藏时导出排名靠前的相关论文，数量由日报配置决定"><svg class="icon"><use href="#i-download"/></svg>导出 BibTeX</a></div>
+      <div class="papers-toolbar"><div><h2>论文线索 <span id="results-count" class="count-label"></span></h2><p>主题相关度基于标题、摘要与分类，不代表论文质量或证明正确性。</p></div><div class="export-controls" role="group" aria-label="导出当前结果"><span class="export-caption">导出当前结果</span><a class="button button-plain" id="bib-link" href="/api/exports/bib?scope=view" download="research-radar.bib" title="导出当前筛选结果中的全部论文"><svg class="icon"><use href="#i-download"/></svg>BibTeX</a><a class="button button-plain" id="markdown-link" href="/api/exports/markdown?scope=view" download="research-radar.md" title="导出当前筛选结果与已保存的笔记"><svg class="icon"><use href="#i-download"/></svg>Markdown</a></div></div>
+      <p id="library-stats" class="library-stats"></p>
       <div class="filter-panel">
         <div class="topic-filters" id="topic-filters" aria-label="研究方向筛选"></div>
         <div class="filter-row"><div class="status-filters" aria-label="论文状态筛选">
           <button class="status-filter active" data-filter="all" aria-pressed="true">全部</button>
           <button class="status-filter" data-filter="new" aria-pressed="false">本次新增</button>
           <button class="status-filter" data-filter="updates" aria-pressed="false">版本更新</button>
-          <button class="status-filter" data-filter="saved" aria-pressed="false">收藏</button>
+          <button class="status-filter" data-filter="saved" aria-pressed="false">已收藏</button>
+          <button class="status-filter" data-filter="read" aria-pressed="false">已读</button>
+          <button class="status-filter" data-filter="unread" aria-pressed="false">未读</button>
+          <button class="status-filter" data-filter="notes" aria-pressed="false">有笔记</button>
           <button class="status-filter" data-filter="hidden" aria-pressed="false">已忽略</button>
-        </div><label class="search-box"><svg class="icon"><use href="#i-search"/></svg><input id="search-input" type="search" placeholder="搜索标题、作者或关键词" aria-label="搜索标题、作者或关键词" autocomplete="off"></label></div>
+        </div><label class="search-box"><svg class="icon"><use href="#i-search"/></svg><input id="search-input" type="search" placeholder="搜索标题、作者、关键词或笔记" aria-label="搜索标题、作者、关键词或笔记" autocomplete="off"></label></div>
+        <div class="sort-row"><label class="sort-control" for="sort-select"><span>排序</span><select id="sort-select"><option value="relevance">相关性优先</option><option value="newest">最近更新优先</option><option value="title">按标题排序</option></select></label><span class="saved-notes-hint">导出包括已保存笔记；草稿仅在本标签页保留。</span></div>
       </div>
       <div id="paper-list" class="paper-list" aria-live="polite"><div class="empty-state"><span class="loading-spinner"></span><h3>正在载入研究线索</h3><p>读取本地论文库与最近扫描记录。</p></div></div>
     </section>

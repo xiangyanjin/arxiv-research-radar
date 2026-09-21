@@ -25,8 +25,25 @@ def main():
     ack.add_argument("file", type=Path)
     subs.add_parser("digest", help="生成最新日报")
     subs.add_parser("status", help="查看扫描状态")
+    evaluation = subs.add_parser("evaluate", help="Offline evaluation against labeled relevance cases")
+    evaluation.add_argument("dataset", type=Path)
+    evaluation.add_argument("--profile", type=Path, help="Profile to evaluate; defaults to the active profile")
+    evaluation.add_argument("--k", type=int, default=5)
+    evaluation.add_argument("--output", type=Path)
     args = parser.parse_args()
     try:
+        if args.command == "evaluate":
+            from .config import load_profile, profile_path
+            from .evaluation import evaluate
+            from .service import ROOT
+            result = evaluate(json.loads(args.dataset.read_text(encoding="utf-8")),
+                              load_profile(profile_path(ROOT, args.profile)), args.k)
+            if args.output:
+                write_json(args.output, result)
+                print(str(args.output.resolve()))
+            else:
+                print(json.dumps(result, ensure_ascii=False, indent=2))
+            return 0
         radar = Radar()
         if args.command == "serve":
             from .server import serve
