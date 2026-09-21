@@ -1,0 +1,138 @@
+{
+  "name": "Astrophysics Radar",
+  "description": "An editable example spanning cosmology, galaxies, exoplanets, and compact objects.",
+  "display": {
+    "name": "Astrophysics Radar",
+    "timezone": "UTC"
+  },
+  "categories": [
+    "astro-ph.CO",
+    "astro-ph.GA",
+    "astro-ph.SR",
+    "astro-ph.EP",
+    "astro-ph.HE",
+    "gr-qc"
+  ],
+  "topics": [
+    {
+      "id": "astro-cosmology",
+      "label": "Cosmology",
+      "description": "Cosmological inference, structure formation, and the early universe.",
+      "keywords": [
+        "dark energy",
+        "large scale structure",
+        "large-scale structure",
+        "Hubble tension",
+        "cosmological parameters",
+        "early universe",
+        "cosmic microwave background"
+      ],
+      "anchors": [
+        "dark energy",
+        "large scale structure",
+        "Hubble tension",
+        "cosmological",
+        "early universe",
+        "cosmic microwave background"
+      ],
+      "categories": [
+        "astro-ph.CO"
+      ],
+      "weight": 1.0
+    },
+    {
+      "id": "astro-galaxies",
+      "label": "Galaxies and star formation",
+      "description": "Formation and evolution of galaxies, stars, and the interstellar medium.",
+      "keywords": [
+        "galaxy formation",
+        "galaxy evolution",
+        "galactic dynamics",
+        "star formation",
+        "interstellar medium"
+      ],
+      "anchors": [
+        "galaxy",
+        "galactic",
+        "star formation",
+        "interstellar medium"
+      ],
+      "categories": [
+        "astro-ph.GA",
+        "astro-ph.SR"
+      ],
+      "weight": 1.0
+    },
+    {
+      "id": "astro-exoplanets",
+      "label": "Exoplanets and planet formation",
+      "description": "Exoplanet populations, atmospheres, and planet-forming environments.",
+      "keywords": [
+        "exoplanet",
+        "exoplanets",
+        "planetary atmosphere",
+        "planetary atmospheres",
+        "protoplanetary disk",
+        "planet formation"
+      ],
+      "anchors": [
+        "exoplanet",
+        "exoplanets",
+        "planetary atmosphere",
+        "planetary atmospheres",
+        "protoplanetary disk",
+        "planet formation"
+      ],
+      "categories": [
+        "astro-ph.EP",
+        "astro-ph.SR"
+      ],
+      "weight": 1.0
+    },
+    {
+      "id": "astro-compact-objects",
+      "label": "Compact objects",
+      "description": "Black holes, neutron stars, and gravitational-wave astrophysics.",
+      "keywords": [
+        "black hole",
+        "black holes",
+        "neutron star",
+        "neutron stars",
+        "pulsar",
+        "pulsars",
+        "gravitational wave",
+        "gravitational waves",
+        "compact binary"
+      ],
+      "anchors": [
+        "black hole",
+        "black holes",
+        "neutron star",
+        "neutron stars",
+        "pulsar",
+        "pulsars",
+        "gravitational wave",
+        "gravitational waves",
+        "compact binary"
+      ],
+      "categories": [
+        "astro-ph.HE",
+        "astro-ph.SR",
+        "gr-qc"
+      ],
+      "weight": 1.0
+    }
+  ],
+  "own_arxiv_ids": [],
+  "self_author_names": [],
+  "scan": {
+    "lookback_days": 14,
+    "overlap_days": 3,
+    "page_size": 1000,
+    "max_pages": 30,
+    "timeout_seconds": 20,
+    "retries": 1
+  },
+  "digest_limit": 8,
+  "minimum_score": 20
+}

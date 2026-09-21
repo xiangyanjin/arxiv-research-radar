@@ -1,0 +1,136 @@
+{
+  "name": "Quantitative Finance Radar",
+  "description": "An editable research-literature profile for financial prediction, portfolios, execution, and risk.",
+  "display": {
+    "name": "Quantitative Finance Radar",
+    "timezone": "UTC"
+  },
+  "categories": [
+    "q-fin.ST",
+    "q-fin.CP",
+    "q-fin.TR",
+    "q-fin.PM",
+    "q-fin.RM"
+  ],
+  "topics": [
+    {
+      "id": "financial-time-series",
+      "label": "Financial time series",
+      "description": "Statistical prediction, volatility, and financial-market time series.",
+      "keywords": [
+        "financial time series",
+        "volatility forecasting",
+        "return prediction",
+        "financial forecasting",
+        "asset returns",
+        "cryptocurrency"
+      ],
+      "anchors": [
+        "financial",
+        "volatility",
+        "return prediction",
+        "asset returns",
+        "cryptocurrency"
+      ],
+      "categories": [
+        "q-fin.ST",
+        "q-fin.CP",
+        "q-fin.TR"
+      ],
+      "weight": 1.0
+    },
+    {
+      "id": "portfolio-allocation",
+      "label": "Portfolio allocation",
+      "description": "Portfolio construction and statistical or computational allocation methods.",
+      "keywords": [
+        "portfolio optimization",
+        "portfolio allocation",
+        "optimal portfolio",
+        "asset allocation",
+        "risk parity",
+        "mean variance",
+        "mean-variance"
+      ],
+      "anchors": [
+        "portfolio",
+        "asset allocation",
+        "risk parity"
+      ],
+      "categories": [
+        "q-fin.PM",
+        "q-fin.CP",
+        "q-fin.ST"
+      ],
+      "weight": 1.0
+    },
+    {
+      "id": "trading-and-execution",
+      "label": "Trading and execution research",
+      "description": "Market microstructure, execution, and empirical trading-method research.",
+      "keywords": [
+        "algorithmic trading",
+        "optimal execution",
+        "limit order book",
+        "market making",
+        "statistical arbitrage",
+        "alpha factor",
+        "alpha factors"
+      ],
+      "anchors": [
+        "trading",
+        "execution",
+        "order book",
+        "market making",
+        "arbitrage",
+        "alpha factor",
+        "alpha factors"
+      ],
+      "categories": [
+        "q-fin.TR",
+        "q-fin.CP",
+        "q-fin.ST"
+      ],
+      "weight": 1.0
+    },
+    {
+      "id": "financial-risk-models",
+      "label": "Financial risk models",
+      "description": "Measurement and modeling of market, credit, and systemic financial risk.",
+      "keywords": [
+        "value at risk",
+        "expected shortfall",
+        "risk management",
+        "financial risk",
+        "credit risk",
+        "systemic risk"
+      ],
+      "anchors": [
+        "financial",
+        "market risk",
+        "credit risk",
+        "value at risk",
+        "expected shortfall",
+        "systemic risk"
+      ],
+      "categories": [
+        "q-fin.RM",
+        "q-fin.ST",
+        "q-fin.PM"
+      ],
+      "weight": 1.0
+    }
+  ],
+  "own_arxiv_ids": [],
+  "self_author_names": [],
+  "scan": {
+    "lookback_days": 14,
+    "overlap_days": 3,
+    "page_size": 1000,
+    "max_pages": 30,
+    "timeout_seconds": 20,
+    "retries": 1
+  },
+  "digest_limit": 8,
+  "minimum_score": 20
+}

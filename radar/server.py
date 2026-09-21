@@ -20,8 +20,8 @@ class LoopbackHTTPServer(ThreadingHTTPServer):
         self.server_port = self.server_address[1]
 
 
-def serve(port=8765, root=None):
-    radar = Radar(root) if root else Radar()
+def serve(port=8765, root=None, *, radar=None):
+    radar = radar if radar is not None else Radar(root) if root else Radar()
 
     class Handler(BaseHTTPRequestHandler):
         def local_request(self):

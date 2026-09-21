@@ -1,15 +1,16 @@
 # arXiv Research Radar
 
-**本地研究雷达：可解释的论文推荐、版本追踪与有证据约束的 Agent 解读。**
+**可安装的 Agent Skill 与本地研究雷达：自选研究方向，可解释推荐、版本追踪与有证据约束的论文解读。**
 
-[English](README.md) · [Agent 操作合同](docs/agent-harness.md) · [配置说明](docs/configuration.md) · [参与贡献](CONTRIBUTING.md)
+[English](README.md) · [安装 Skill](docs/agent-skill.md) · [Agent 操作合同](docs/agent-harness.md) · [配置说明](docs/configuration.md) · [参与贡献](CONTRIBUTING.md)
 
-持续跟进研究方向，知道每篇论文为什么被推荐，也知道一次扫描是否完整。
+告诉 Agent 你研究什么，生成自己的研究配置，再持续跟进相关论文。知道每篇论文为什么被推荐，也知道扫描是否完整。默认数学配置只是示例，不限定你的研究方向。
 
 ![arXiv 研究雷达界面](docs/images/dashboard.zh-CN.png)
 
 ## 能做什么
 
+- **自选方向：** 用自然语言描述兴趣、选择模板，或编辑 JSON 配置；支持为 arXiv 覆盖的任意学科配置方向与关键词。
 - **获取论文：** 按研究分类扫描 arXiv 官方元数据，支持分页、请求限速、重试与原始响应归档。
 - **解释推荐：** 根据研究配置匹配标题和摘要，展示命中的关键词与方向。
 - **追踪变化：** SQLite 去重合并跨分类记录，区分首次发现与版本更新，保留收藏和阅读反馈。
@@ -20,7 +21,28 @@
 
 检索和界面**只依赖 Python 标准库，不需要模型 API Key**。程序自身不调用大模型；中文解读由外部 Agent 生成 JSON 后导入。详见 [Agent 操作合同](docs/agent-harness.md)。
 
-## 快速开始
+## 安装为 Agent Skill
+
+将**整个仓库**克隆到宿主的技能目录。仓库包含 `SKILL.md`、Python 运行时、配置模板与跨工作目录调用脚本，不能只复制一个指令文件。
+
+Codex 安装示例：
+
+```bash
+mkdir -p ~/.agents/skills
+git clone https://github.com/xiangyanjin/arxiv-research-radar.git ~/.agents/skills/arxiv-research-radar
+```
+
+如果目标目录已存在，复用现有安装或选择新目录，不要覆盖。Codex 的用户级技能目录见[官方 Build skills 文档](https://learn.chatgpt.com/docs/build-skills)。其他支持 `SKILL.md` 的宿主应按各自文档选择目录；这不代表已逐一验证所有平台。
+
+安装后可以直接说：
+
+> 用 $arxiv-research-radar，帮我关注 LLM Agent、工具调用和 Agent 评测，为当前项目建立配置，扫描最近七天。
+
+> 用 $arxiv-research-radar，关注系外行星大气与透射光谱，单独建立一个论文库，不和我的 AI 论文混在一起。
+
+宿主 Agent 将自然语言需求转成配置，并调用仓库内的 CLI；模型能力由宿主提供，不新增模型 SDK 或 API 服务。**安装 Skill、选择研究方向，不等于已经启用每日订阅。** [安装、自定义方向与跨目录命令 →](docs/agent-skill.md)
+
+## 作为本地应用快速开始
 
 需要 **macOS 或 Linux，以及 Python 3.10+**。扫描锁使用 `fcntl`，目前不支持 Windows。
 
@@ -38,12 +60,17 @@ ARXIV_RADAR_DATA_DIR=data/demo python3 -m radar serve
 
 打开 **[http://127.0.0.1:8765](http://127.0.0.1:8765)**。示例使用公开论文元数据的部分快照，存储在独立的 `data/demo` 目录；它不是实时或完整扫描结果。
 
-**建立自己的论文库：** 停止示例服务后运行：
+**建立自己的论文库：** 停止示例服务，选择初始配置并运行：
 
 ```bash
+python3 -m radar profiles
+python3 -m radar init-profile --preset ai-agents --output config/profile.local.json --name "我的研究雷达" --timezone UTC
+python3 -m radar validate-profile config/profile.local.json
 python3 -m radar scan
 python3 -m radar serve
 ```
+
+可将 `ai-agents` 换成下表任意模板，再编辑生成的配置。`init-profile` 不覆盖已有文件；如果你已配置过，请复用该文件或指定新的输出路径。
 
 使用界面时保持服务终端运行。也可以先启动 `serve`，再从界面发起扫描。
 
@@ -51,13 +78,16 @@ python3 -m radar serve
 
 ## 配置自己的方向
 
-```bash
-cp config/profile.json config/profile.local.json
-```
+| 模板 | 初始方向 |
+| --- | --- |
+| `math-statistics` | 概率、随机矩阵与统计 |
+| `ai-agents` | LLM Agent、工具调用与评测 |
+| `quant-finance` | 量化金融研究 |
+| `astrophysics` | 天体物理研究 |
 
-在本地副本中修改分类、研究方向、关键词和推荐阈值。该文件已被 Git 忽略，并优先于仓库默认配置加载。附带示例覆盖随机矩阵、张量统计、马尔可夫链和集中不等式，你可以换成自己的方向。
+模板只是起点，不是学科清单。你可以让 Skill 定制“分子图学习”等方向，也可以自行编辑分类、主题、关键词和可选的语境锚点，再运行配置校验。
 
-也可以使用 `ARXIV_RADAR_PROFILE` 指定配置文件、使用 `ARXIV_RADAR_DATA_DIR` 指定数据目录。[查看配置说明 →](docs/configuration.md)
+在**子命令之后**使用 `--profile /绝对路径/profile.json --data-dir /绝对路径/data`，即可分别管理多个研究方向的论文库。原有的 `ARXIV_RADAR_PROFILE` 与 `ARXIV_RADAR_DATA_DIR` 环境变量仍可使用。[查看配置与自定义示例 →](docs/configuration.md)
 
 ## 从发现论文到积累阅读
 
@@ -98,7 +128,7 @@ python3 -m radar import-reviews data/reviews.json
 python3 -m radar digest
 ```
 
-[Agent 指南](docs/agent-harness.md) 提供 JSON 格式和可复用提示词。有终端和文件访问能力的编码 Agent 可以按合同运行；仓库没有内置专用 Codex 或 Claude Code 集成。
+根目录的 [SKILL.md](SKILL.md) 提供宿主 Agent 的操作指令，[Agent 合同](docs/agent-harness.md) 定义解读 JSON 与证据边界。宿主需要终端和文件访问能力；仓库未内置模型 SDK、消息连接器或调度服务。
 
 ## 每日使用
 

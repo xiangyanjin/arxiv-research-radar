@@ -1,6 +1,7 @@
 __pycache__/
 *.pyc
 data/
+radar-workspace/
 output/
 .DS_Store
 .env

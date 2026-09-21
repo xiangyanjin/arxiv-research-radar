@@ -1,0 +1,116 @@
+{
+  "name": "AI Agents Radar",
+  "description": "An editable example for language-model tool use, agent evaluation, planning, and coordination.",
+  "display": {
+    "name": "AI Agents Radar",
+    "timezone": "UTC"
+  },
+  "categories": [
+    "cs.AI",
+    "cs.CL",
+    "cs.SE",
+    "cs.HC",
+    "cs.LG",
+    "cs.MA"
+  ],
+  "topics": [
+    {
+      "id": "agent-tool-use",
+      "label": "Tool use and integration",
+      "description": "How language-model agents select, call, and integrate external tools.",
+      "keywords": [
+        "tool use",
+        "tool calling",
+        "function calling",
+        "tool-augmented language models",
+        "tool augmented language models",
+        "Model Context Protocol"
+      ],
+      "anchors": [
+        "language model",
+        "language models",
+        "LLM",
+        "LLMs",
+        "agent",
+        "agents"
+      ],
+      "categories": [
+        "cs.AI",
+        "cs.CL",
+        "cs.SE"
+      ],
+      "weight": 1.0
+    },
+    {
+      "id": "agent-evaluation",
+      "label": "Agent evaluation and interaction",
+      "description": "Benchmarks and grounded interaction with websites, browsers, and computer interfaces.",
+      "keywords": [
+        "agent evaluation",
+        "agent benchmark",
+        "agent benchmarks",
+        "agentic benchmark",
+        "web agent",
+        "web agents",
+        "browser agent",
+        "computer use",
+        "computer-use agents"
+      ],
+      "anchors": [
+        "agent",
+        "agents",
+        "agentic",
+        "computer use"
+      ],
+      "categories": [
+        "cs.AI",
+        "cs.CL",
+        "cs.HC",
+        "cs.LG"
+      ],
+      "weight": 1.0
+    },
+    {
+      "id": "agent-planning-memory",
+      "label": "Planning, memory, and coordination",
+      "description": "Planning and memory for agents, including coordination between multiple agents.",
+      "keywords": [
+        "language model planning",
+        "multi-agent",
+        "multi agent",
+        "agent memory",
+        "agentic reasoning",
+        "long-horizon planning",
+        "long horizon tasks",
+        "reasoning agents"
+      ],
+      "anchors": [
+        "language model",
+        "language models",
+        "LLM",
+        "LLMs",
+        "agent",
+        "agents",
+        "agentic"
+      ],
+      "categories": [
+        "cs.AI",
+        "cs.MA",
+        "cs.LG"
+      ],
+      "weight": 1.0
+    }
+  ],
+  "own_arxiv_ids": [],
+  "self_author_names": [],
+  "scan": {
+    "lookback_days": 14,
+    "overlap_days": 3,
+    "page_size": 1000,
+    "max_pages": 30,
+    "timeout_seconds": 20,
+    "retries": 1
+  },
+  "digest_limit": 8,
+  "minimum_score": 20
+}

@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 
 from .service import Radar, BusyError, write_json
+from .profiles import PRESET_IDS
 
 
 def main():
@@ -23,8 +24,19 @@ def main():
     delivery.add_argument("--output", type=Path)
     ack = subs.add_parser("acknowledge", help="记录本次通知摘要已准备发送的范围")
     ack.add_argument("file", type=Path)
-    subs.add_parser("digest", help="生成最新日报")
-    subs.add_parser("status", help="查看扫描状态")
+    digest = subs.add_parser("digest", help="生成最新日报")
+    status = subs.add_parser("status", help="查看扫描状态")
+    for command in (scan, serve, queue, reviews, delivery, ack, digest, status):
+        command.add_argument("--profile", type=Path, help="Research profile; relative paths use the repository root")
+        command.add_argument("--data-dir", type=Path, help="Separate state directory; relative paths use the repository root")
+    subs.add_parser("profiles", help="List editable starter research profiles")
+    initialize = subs.add_parser("init-profile", help="Create a profile without overwriting an existing file")
+    initialize.add_argument("--preset", required=True, choices=PRESET_IDS)
+    initialize.add_argument("--output", type=Path, default=Path("config/profile.local.json"))
+    initialize.add_argument("--name")
+    initialize.add_argument("--timezone")
+    validate = subs.add_parser("validate-profile", help="Validate any research profile without opening a database")
+    validate.add_argument("file", type=Path)
     evaluation = subs.add_parser("evaluate", help="Offline evaluation against labeled relevance cases")
     evaluation.add_argument("dataset", type=Path)
     evaluation.add_argument("--profile", type=Path, help="Profile to evaluate; defaults to the active profile")
@@ -32,6 +44,19 @@ def main():
     evaluation.add_argument("--output", type=Path)
     args = parser.parse_args()
     try:
+        if args.command == "profiles":
+            from .profiles import list_presets
+            print(json.dumps({"presets": list_presets(), "custom_profiles_supported": True}, ensure_ascii=False, indent=2))
+            return 0
+        if args.command == "init-profile":
+            from .profiles import init_profile
+            print(json.dumps(init_profile(args.preset, args.output, name=args.name, timezone=args.timezone), ensure_ascii=False, indent=2))
+            return 0
+        if args.command == "validate-profile":
+            from .config import load_profile
+            path = args.file.expanduser().absolute()
+            print(json.dumps({"valid": True, "path": str(path), "profile": load_profile(path)}, ensure_ascii=False, indent=2))
+            return 0
         if args.command == "evaluate":
             from .config import load_profile, profile_path
             from .evaluation import evaluate
@@ -44,10 +69,10 @@ def main():
             else:
                 print(json.dumps(result, ensure_ascii=False, indent=2))
             return 0
-        radar = Radar()
+        radar = Radar(profile=args.profile, data_dir=args.data_dir)
         if args.command == "serve":
             from .server import serve
-            return serve(args.port)
+            return serve(args.port, radar=radar)
         if args.command == "scan":
             if args.days is not None and not 1 <= args.days <= 90:
                 parser.error("--days 须在 1 至 90 之间")

@@ -1,0 +1,4 @@
+interface:
+  display_name: "arXiv Research Radar"
+  short_description: "Follow papers in your chosen research directions"
+  default_prompt: "Use $arxiv-research-radar to set up a paper feed for my research interests and explain relevant new papers."
