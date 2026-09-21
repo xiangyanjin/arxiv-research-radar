@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import json
 import sqlite3
+import time
+from contextlib import closing
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -11,7 +13,8 @@ class Store:
     def __init__(self, path: Path):
         self.path = Path(path)
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        with self.connect() as db:
+        with closing(self.connect()) as db, db:
+            self._enable_wal(db)
             # Serialize discovery and ALTER TABLE across CLI/server processes.
             # SQLite DDL is transactional; no process sees a half-migrated table.
             db.execute("BEGIN IMMEDIATE")
@@ -38,8 +41,34 @@ class Store:
     def connect(self):
         db = sqlite3.connect(self.path, timeout=15)
         db.row_factory = sqlite3.Row
-        db.execute("PRAGMA journal_mode=WAL")
         return db
+
+    @staticmethod
+    def _enable_wal(db):
+        """Initialize persistent WAL mode, tolerating brief opening races only."""
+        # The mode-switch PRAGMA can fail immediately despite SQLite's normal
+        # busy handler. Keep each attempt short instead of multiplying the
+        # ordinary 15-second transaction timeout by the retry count.
+        db.execute("PRAGMA busy_timeout=250")
+        delays = (0.05, 0.1, 0.2, 0.4, 0.8, 1.0, 1.0)
+        for attempt in range(len(delays) + 1):
+            try:
+                db.execute("PRAGMA journal_mode=WAL")
+                break
+            except sqlite3.OperationalError as error:
+                code = getattr(error, "sqlite_errorcode", None)
+                if isinstance(code, int):
+                    transient = (code & 0xFF) in (5, 6)  # SQLITE_BUSY / SQLITE_LOCKED, including extended codes.
+                else:
+                    # Python 3.10 does not expose sqlite_errorcode. Match only
+                    # SQLite's known lock messages, never unrelated failures.
+                    message = str(error).lower()
+                    transient = message in ("database is locked", "database table is locked", "database schema is locked") or \
+                        message.startswith(("database table is locked:", "database schema is locked:"))
+                if not transient or attempt == len(delays):
+                    raise
+                time.sleep(delays[attempt])
+        db.execute("PRAGMA busy_timeout=15000")
 
     def get_setting(self, key, default=None):
         with self.connect() as db:
@@ -145,7 +174,7 @@ class Store:
                 raise ValueError("论文不存在")
             if "notes" in changes:
                 changes["notes_updated_at"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
-                changes["notes_version"] = paper["version"] if changes["notes"].strip() else None
+                changes["notes_version"] = paper["version"] if changes["notes"].strip() and paper["version"] > 0 else None
             assignments = ", ".join(f'"{name}"=?' for name in changes)
             db.execute(f"UPDATE papers SET {assignments} WHERE id=?", (*changes.values(), paper_id))
             # Legacy clients can represent only one state. The independent

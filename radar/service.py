@@ -400,9 +400,9 @@ class Radar:
             lines += literal(paper["abstract"])
             lines += ["", "### User notes / 用户笔记", ""]
             if paper["notes"].strip():
-                lines += [f"Notes saved for version / 笔记对应版本: {paper['notes_version']}",
+                lines += [f"Notes saved for version / 笔记对应版本: {paper['notes_version'] or 'unknown / 未知'}",
                           f"Updated (UTC) / 笔记更新时间: {paper['notes_updated_at']}", ""]
-                if paper["notes_version"] != paper["version"]:
+                if paper["notes_version"] and paper["notes_version"] != paper["version"]:
                     lines += ["These notes were saved for a different paper version. / 笔记对应旧版本，请结合当前版本复核。", ""]
                 lines += literal(paper["notes"])
             else:

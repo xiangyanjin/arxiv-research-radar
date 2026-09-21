@@ -6,7 +6,7 @@ The library stores three independent states: **saved**, **read**, and **hidden**
 
 Each paper can store up to 5,000 characters of plain-text notes. Save explicitly to write them to the local SQLite database. Cancel discards the editor draft. Drafts remain in the current browser tab's session storage across filtering, view changes, language changes and reloads; they are not a database backup or cross-device sync. Saving failures retain the draft.
 
-The database records when a note was saved and the paper version at that time. A newer arXiv version retains the note and its original version label so you can recheck whether it still applies. Clearing the note clears its version association. The reading list labels these as user notes rather than model analysis or claims in the source paper.
+The database records when a note was saved and the paper version at that time. If the source has not supplied a version, the association is explicitly unknown, never a fictional v0. A newer arXiv version retains the note and its original version label so you can recheck whether it still applies. Clearing the note clears its version association. The reading list labels these as user notes rather than model analysis or claims in the source paper.
 
 ## Filters and exports
 

@@ -43,6 +43,36 @@ def create_legacy(path):
                                                                        feedback, json.dumps({"version": 1})))
 
 
+class FaultingConnection:
+    """Inject mode-switch failures while exercising real SQLite migration DDL."""
+    def __init__(self, path, failures):
+        self.connection = sqlite3.connect(path)
+        self.connection.row_factory = sqlite3.Row
+        self.failures = list(failures)
+        self.wal_attempts = 0
+        self.closed = False
+        self.statements = []
+
+    def execute(self, statement, *args):
+        self.statements.append(statement)
+        if statement == "PRAGMA journal_mode=WAL":
+            self.wal_attempts += 1
+            if self.failures:
+                raise self.failures.pop(0)
+        return self.connection.execute(statement, *args)
+
+    def __enter__(self):
+        self.connection.__enter__()
+        return self
+
+    def __exit__(self, *args):
+        return self.connection.__exit__(*args)
+
+    def close(self):
+        self.closed = True
+        self.connection.close()
+
+
 class MigrationTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
@@ -65,6 +95,65 @@ class MigrationTests(unittest.TestCase):
         reopened = Store(self.path).papers()[0]
         self.assertTrue(reopened["saved"] and reopened["read"])
         self.assertEqual(reopened["notes"], "Keep this note")
+
+    def test_wal_busy_once_recovers_and_closes_initialization_connection(self):
+        # A plain message exercises the Python 3.10 compatibility path.
+        connection = FaultingConnection(self.path, [sqlite3.OperationalError("database is locked")])
+        with patch.object(Store, "connect", return_value=connection), patch("radar.store.time.sleep") as sleep:
+            store = Store(self.path)
+        self.assertEqual(connection.wal_attempts, 2)
+        sleep.assert_called_once_with(.05)
+        self.assertEqual(connection.statements[0], "PRAGMA busy_timeout=250")
+        self.assertIn("PRAGMA busy_timeout=15000", connection.statements)
+        self.assertTrue(connection.closed)
+        self.assertEqual(len(store.papers()), 4)
+        self.assertTrue(store.papers()[0]["saved"])
+        # Business connections reuse the persistent mode; no PRAGMA race per read.
+        db = sqlite3.connect(self.path)
+        statements = []
+        db.set_trace_callback(statements.append)
+        try:
+            with patch("radar.store.sqlite3.connect", return_value=db):
+                self.assertIs(store.connect(), db)
+            db.execute("SELECT COUNT(*) FROM papers").fetchone()
+            self.assertFalse(any("journal_mode" in statement for statement in statements))
+        finally:
+            db.close()
+
+    def test_wal_extended_busy_codes_are_retried(self):
+        error = sqlite3.OperationalError("temporary mode-switch conflict")
+        error.sqlite_errorcode = 5 | (1 << 8)  # SQLITE_BUSY_RECOVERY
+        connection = FaultingConnection(self.path, [error])
+        with patch.object(Store, "connect", return_value=connection), patch("radar.store.time.sleep") as sleep:
+            Store(self.path)
+        self.assertEqual(connection.wal_attempts, 2)
+        sleep.assert_called_once()
+        self.assertTrue(connection.closed)
+
+    def test_non_busy_wal_failure_is_immediate_and_closes_connection(self):
+        error = sqlite3.OperationalError("disk I/O error")
+        connection = FaultingConnection(self.path, [error])
+        with patch.object(Store, "connect", return_value=connection), patch("radar.store.time.sleep") as sleep:
+            with self.assertRaises(sqlite3.OperationalError) as raised:
+                Store(self.path)
+        self.assertIs(raised.exception, error)
+        self.assertEqual(connection.wal_attempts, 1)
+        sleep.assert_not_called()
+        self.assertTrue(connection.closed)
+        with self.assertRaises(sqlite3.ProgrammingError):
+            connection.connection.execute("SELECT 1")
+
+    def test_persistent_wal_busy_stops_after_bounded_retries_and_closes(self):
+        error = sqlite3.OperationalError("database is locked")
+        connection = FaultingConnection(self.path, [error] * 8)
+        with patch.object(Store, "connect", return_value=connection), patch("radar.store.time.sleep") as sleep:
+            with self.assertRaises(sqlite3.OperationalError) as raised:
+                Store(self.path)
+        self.assertIs(raised.exception, error)
+        self.assertEqual(connection.wal_attempts, 8)
+        self.assertEqual(sleep.call_count, 7)
+        self.assertLessEqual(sum(call.args[0] for call in sleep.call_args_list), 4)
+        self.assertTrue(connection.closed)
 
     def test_concurrent_processes_migrate_the_same_legacy_database(self):
         directory = Path(self.temp.name)
@@ -155,6 +244,19 @@ class LibraryTests(unittest.TestCase):
         self.assertEqual(self.record()["notes"], "  \n")
         self.assertIsNone(self.record()["notes_version"])
         self.assertEqual(self.radar.papers(filter="notes"), [])
+
+    def test_notes_on_unknown_version_preserve_unknown_until_resaved(self):
+        unknown = paper(2, version=0)
+        unknown.update(source="arxiv-rss", updated="", published="", announced=NOW,
+                       url="https://arxiv.org/abs/2609.00002", pdf_url="https://arxiv.org/pdf/2609.00002")
+        self.radar.store.upsert(unknown, "rss-test", NOW)
+        self.radar.store.update_library({"id": unknown["id"], "notes": "Announcement-only reading note"})
+        self.assertIsNone(self.record(2)["notes_version"])
+        self.radar.store.upsert(paper(2, version=1), "api-test", NOW)
+        self.assertEqual(self.record(2)["notes"], "Announcement-only reading note")
+        self.assertIsNone(self.record(2)["notes_version"])
+        self.radar.store.update_library({"id": unknown["id"], "notes": "Checked against version one"})
+        self.assertEqual(self.record(2)["notes_version"], 1)
 
     def test_managed_papers_remain_reachable_after_profile_change(self):
         self.radar.store.update_library({"id": paper()["id"], "saved": True, "read": True, "notes": "Keep"})

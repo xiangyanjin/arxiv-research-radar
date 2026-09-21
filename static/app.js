@@ -403,9 +403,11 @@
     const body = el("div", "note-body");
     const metadata = el("p", "note-metadata");
     const parts = [];
-    if (paper.notes_version != null && savedNotes) {
-      parts.push(i18n.language === "zh" ? `已保存笔记来自 v${paper.notes_version}` : `Saved notes from v${paper.notes_version}`);
-      if (paper.notes_version !== paper.version) parts.push(i18n.language === "zh" ? `当前论文为 v${paper.version}，请核对笔记` : `Current paper: v${paper.version}; review your notes`);
+    if (savedNotes) {
+      parts.push(paper.notes_version > 0
+        ? (i18n.language === "zh" ? `已保存笔记来自 v${paper.notes_version}` : `Saved notes from v${paper.notes_version}`)
+        : (i18n.language === "zh" ? "保存笔记时，论文版本未知" : "Paper version was unknown when these notes were saved"));
+      if (paper.version > 0 && paper.notes_version !== paper.version) parts.push(i18n.language === "zh" ? `当前论文为 v${paper.version}，请核对笔记` : `Current paper: v${paper.version}; review your notes`);
     }
     if (paper.notes_updated_at && savedNotes) parts.push(`${date(paper.notes_updated_at, true)} · ${timeZone()}`);
     metadata.textContent = parts.join(" · ");
@@ -439,7 +441,10 @@
       length.classList.toggle("is-over-limit", characters > 5000);
       textarea.setAttribute("aria-invalid", String(characters > 5000));
       status.textContent = current?.saving ? t("正在保存；此时继续输入的文字会保留为新草稿。") : dirty ? t("尚未保存 · 切换筛选或语言时保留草稿") : savedNotes ? t("笔记已保存到本地论文库。") : t("最多 5,000 字符；保存后可搜索与导出。 ");
-      if (dirty && current.version != null && current.version !== paper.version) status.textContent += i18n.language === "zh" ? ` 草稿起于 v${current.version}；当前论文为 v${paper.version}。` : ` Draft started on v${current.version}; current paper is v${paper.version}.`;
+      if (dirty && current.version !== paper.version) {
+        const versionLabel = (value) => value > 0 ? `v${value}` : (i18n.language === "zh" ? "未知版本" : "unknown version");
+        status.textContent += i18n.language === "zh" ? ` 草稿起于${versionLabel(current.version)}；当前论文为${versionLabel(paper.version)}。` : ` Draft started on ${versionLabel(current.version)}; current paper is ${versionLabel(paper.version)}.`;
+      }
       error.textContent = characters > 5000 ? t("笔记超过 5,000 字符，请缩短后保存；文字仍已保留。") : current?.error || "";
       error.hidden = !error.textContent;
       summary.textContent = dirty ? `${t("阅读笔记")} · ${t("未保存")}` : savedNotes ? `${t("阅读笔记")} · ${t("已保存")}` : t("阅读笔记");
